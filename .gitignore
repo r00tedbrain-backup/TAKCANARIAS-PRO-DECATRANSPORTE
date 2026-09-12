@@ -1,0 +1,20 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.DS_Store
+.vercel/
+
+# Credentials and private client correspondence
+.env*
+!.env.example
+/Chat de WhatsApp*.txt
+/Meeting Transcription*.txt
+
+# Public source archive stays local (large / unreviewed licensing)
+/_scrape/
+/test-results/
+/playwright-report/
+*.log
