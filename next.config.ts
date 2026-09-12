@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
+const staticExport = process.env.STATIC_EXPORT === "1";
+
 const nextConfig: NextConfig = {
-  redirects: async () => [
+  ...(staticExport ? { output: "export", trailingSlash: true, images: { unoptimized: true } } : {}),
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
+  redirects: staticExport ? undefined : async () => [
     { source: "/inicio-2", destination: "/", permanent: true },
     { source: "/inicio-3", destination: "/", permanent: true },
     { source: "/404-2", destination: "/", permanent: true },

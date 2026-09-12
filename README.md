@@ -1,7 +1,7 @@
 # Takcanarias — web pública
 
 Reconstrucción de la web de asesoría de transportes, formación CAP, autoescuela
-y apoyo escolar. **Versión local para revisión, no publicada.**
+y apoyo escolar. **Versión de revisión; no sustituye la web del dominio de la clienta.**
 
 DeCA, aula online y área de cliente tienen páginas de presentación, no acceso
 privado operativo. Se conserva el alcance solicitado de reservas, seguimiento
@@ -77,6 +77,18 @@ cargar. Revisar consentimiento y tratamiento de datos antes de publicar.
 `next.config.ts` redirige las portadas duplicadas y las entradas históricas de
 tarjetas. Las rutas desconocidas devuelven 404. `/blog` conserva el acceso útil
 de las entradas originales, sin inventar artículos.
+
+## Demo estática para la clienta
+
+Se genera con `pnpm build:pages` y se publica el contenido de `out/` en la rama
+`gh-pages`, separada del código fuente de `main`. No se publican documentos
+privados ni el archivo bruto. La demo mantiene `noindex` y los módulos futuros
+siguen siendo informativos. Un `noindex` no convierte el enlace en privado.
+
+El modo Pages aplica el prefijo del repositorio y usa las imágenes WebP sin
+optimizador de servidor. No incluye las redirecciones históricas de Next. El
+build normal (`pnpm build`) conserva el comportamiento con servidor.
+La publicación es manual: un push de código a `main` no actualiza esta demo.
 
 ## Archivo de la web anterior
 

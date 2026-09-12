@@ -1,6 +1,6 @@
 export const site = {
   name: "Takcanarias",
-  url: "https://www.takcanarias.es",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.takcanarias.es",
   phone: "828 024 990",
   phoneHref: "tel:+34828024990",
   whatsapp: "https://wa.me/34609365012",

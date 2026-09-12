@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/site-image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { services, site } from "@/content/site";
@@ -7,7 +7,7 @@ import { ContactBand } from "@/components/contact-band";
 import { TachographAccess } from "@/components/tachograph-access";
 import { LocationMap } from "@/components/location-map";
 
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+export const metadata: Metadata = { alternates: { canonical: site.url } };
 
 export default function Home() {
   return (
