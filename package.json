@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:pages": "STATIC_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/TAKCANARIAS-PRO-DECATRANSPORTE NEXT_PUBLIC_SITE_URL=https://r00tedbrain-backup.github.io/TAKCANARIAS-PRO-DECATRANSPORTE next build",
+    "build:static": "STATIC_EXPORT=1 NEXT_PUBLIC_SITE_URL=https://www.takcanarias.es next build",
     "start": "next start",
     "lint": "eslint",
     "test:smoke": "node scripts/check-site.mjs"
