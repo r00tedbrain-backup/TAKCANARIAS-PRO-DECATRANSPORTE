@@ -217,12 +217,35 @@ Ninguno se habría visto sin probar contra la base real:
    `gen_random_uuid()::text` por defecto a las once tablas.
 2. **Registro cerrado solo de cara.** Descrito arriba.
 
+### Envío de correo
+
+Resuelto el 15/09/2026 con Resend, desde el subdominio `avisos.takcanarias.es`.
+Cubre la verificación de la cuenta y el restablecimiento de contraseña.
+
+Se verificó el subdominio, **no el dominio principal**: hacerlo en la raíz
+obligaba a modificar el SPF que usan los buzones del centro. Los registros
+añadidos y la comprobación de que el correo quedó intacto están en `docs/dns.md`.
+
+La clave de Resend es **de solo envío**: no puede gestionar dominios ni borrar
+nada. Vive únicamente en `/opt/takcanarias/app/.env`, con permisos 600.
+
+Probado contra el servidor real: envío directo aceptado por Resend, alta con
+correo de verificación, reenvío de verificación y solicitud de restablecimiento,
+las tres sin errores en el registro de la aplicación. La cuenta de prueba se
+borró y la base quedó con cero usuarios.
+
+`EMAIL_REMITENTE` **no debe ponerse en el `.env`**: los caracteres `<` y `>` del
+formato `Nombre <correo>` rompen el fichero y la variable llega vacía. El valor
+por defecto está en `src/lib/email.ts`.
+
 ### Pendiente antes de abrir a alumnos reales
 
-1. **Envío de correo.** `requireEmailVerification` está activo pero no hay
-   proveedor configurado: hoy nadie podría verificar su cuenta ni recuperar la
-   contraseña. Hay que elegir proveedor y darlo de alta antes de abrir.
-2. **Recuperación de contraseña.** No existe la página: depende del punto 1.
-3. **Datos legales de la titular**, incluido el consentimiento de tutores.
-4. **Copias de seguridad de la base.** El volumen persiste, pero no hay copia
+1. **Rediseño para menores.** La titular confirma alumnado desde 6 años. La ley
+   española no permite que un menor de 14 consienta por sí mismo, así que la
+   cuenta debe ser del padre, madre o tutor, con los hijos asociados. El modelo
+   actual asume que se registra el propio alumno: **falta esa relación**.
+2. **Consentimiento de tutores**, que hoy se recoge en papel.
+3. **Copias de seguridad de la base.** El volumen persiste, pero no hay copia
    automática fuera del servidor.
+4. **Rotar credenciales**: la contraseña de `root` y la clave de Resend se
+   transmitieron por chat durante el desarrollo.
