@@ -249,3 +249,61 @@ por defecto está en `src/lib/email.ts`.
    automática fuera del servidor.
 4. **Rotar credenciales**: la contraseña de `root` y la clave de Resend se
    transmitieron por chat durante el desarrollo.
+
+## Copias de seguridad
+
+Script: `scripts/copia-seguridad.sh`, desplegado en
+`/opt/takcanarias/copia-seguridad.sh`. Sigue el mismo patrón que el del DeCA
+(`/opt/midecapro/copia-seguridad.sh`) para no tener dos sistemas distintos en
+el mismo servidor.
+
+| Detalle | Valor |
+| --- | --- |
+| Cuándo | Cada día a las 4:45 (el del DeCA va a las 4:30, no se solapan) |
+| Dónde | `/var/backups/takcanarias/alumnos-FECHA.sql.gz` |
+| Conservación | 30 días |
+| Registro | `/var/log/takcanarias-copias.log` |
+
+Se usa `pg_dump`, **no se copia el volumen**. Copiar los ficheros de Postgres
+con la base en marcha produce una copia que parece válida y no lo es.
+
+El volcado se escribe primero como `.parcial` y solo se renombra si termina
+bien, para no dejar copias a medias con aspecto de correctas. Después se
+comprueba que el fichero acaba con la marca de cierre de PostgreSQL.
+
+### Restauración
+
+```sh
+/opt/takcanarias/copia-seguridad.sh --probar-restauracion
+```
+
+Restaura la última copia en una base temporal aparte, cuenta las tablas y las
+borra al terminar. **La base de producción no se toca.**
+
+Probado el 15/09/2026: 11 tablas restauradas, producción intacta y sin bases
+temporales residuales.
+
+Para restaurar de verdad sobre producción, con el servicio parado:
+
+```sh
+docker compose stop takcanarias
+gunzip -c /var/backups/takcanarias/alumnos-FECHA.sql.gz \
+  | docker exec -i selfhosted-takcanarias-db-1 psql -U takcanarias -d takcanarias
+docker compose up -d takcanarias
+```
+
+El volcado lleva `--clean --if-exists`, así que se puede aplicar sobre una base
+que ya tiene datos.
+
+### Limitación importante
+
+**Las copias se guardan en el mismo servidor que la base de datos.** Eso protege
+frente a un borrado accidental, un fallo de la aplicación o datos corrompidos,
+pero **no frente a la pérdida del servidor**: si se pierde la máquina, se pierden
+los datos y las copias a la vez.
+
+El sistema del DeCA tiene exactamente la misma limitación.
+
+Para cubrirlo hay que llevar las copias fuera: otro proveedor, almacenamiento
+de objetos o una máquina distinta. Queda pendiente de decidir, y conviene
+hacerlo antes de que la base contenga datos reales de alumnos.
