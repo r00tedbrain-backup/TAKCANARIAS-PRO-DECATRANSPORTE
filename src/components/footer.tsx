@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "@/components/site-image";
+import Image from "next/image";
 import { site } from "@/content/site";
 import { Icon } from "./icon";
 

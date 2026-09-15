@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description: "Asesoría de transportes, gestión de tacógrafos, formación CAP, autoescuela y apoyo escolar en Las Palmas de Gran Canaria. Atención personal en Takcanarias.",
   // Preview remains non-indexable until content, legal details and domain are approved.
   robots: { index: false, follow: true },
-  icons: { icon: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/brand/favicon.png`, apple: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/brand/favicon.png` },
+  icons: { icon: "/brand/favicon.png", apple: "/brand/favicon.png" },
   openGraph: { type: "website", locale: "es_ES", siteName: "Takcanarias", images: [{ url: `${site.url}/images/aula.webp`, width: 1600, height: 1200, alt: "Centro de formación Takcanarias" }] },
 };
 

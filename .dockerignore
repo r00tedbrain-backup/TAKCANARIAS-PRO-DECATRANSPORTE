@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.git
+_scrape
+docs
+drizzle/meta
+*.log
+.env*
+!.env.example
+Chat de WhatsApp*.txt
+Meeting Transcription*.txt

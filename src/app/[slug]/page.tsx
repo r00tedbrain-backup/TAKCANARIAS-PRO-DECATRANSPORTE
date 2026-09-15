@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "@/components/site-image";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContactBand } from "@/components/contact-band";

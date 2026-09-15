@@ -252,6 +252,37 @@ a:active, button:active { opacity: .8; }
 .access-panel .button { margin: 4px 12px 4px 0; }
 .future-hero a[href^="mailto:"] { overflow-wrap: anywhere; }
 
+/* Formularios del área de alumnos.
+ * El borde mantiene 1px en todos los estados: el foco va por `outline`, que
+ * no desplaza la maquetación. El hueco del mensaje de error se reserva desde
+ * el principio para que la página no dé un salto al aparecer. */
+.form-panel { max-width: 560px; padding: 32px; border: 1px solid var(--color-line); border-radius: var(--radius); background: var(--color-white); }
+.form-field { display: flex; flex-direction: column; margin-bottom: 20px; }
+.form-label { font-size: 13px; font-weight: 600; margin-bottom: 7px; }
+.form-optional { font-weight: 400; color: var(--color-muted); }
+.form-input { min-height: 48px; padding: 12px 14px; font: inherit; font-size: 15px; color: var(--color-ink); background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius); outline: 2px solid transparent; outline-offset: 1px; transition: background 140ms var(--ease), border-color 140ms var(--ease); }
+.form-input:hover:not(:disabled) { background: var(--color-white); }
+.form-input:focus-visible { outline-color: var(--color-focus); background: var(--color-white); }
+.form-input[aria-invalid="true"] { border-color: var(--color-focus); }
+.form-input:disabled { opacity: .55; cursor: not-allowed; }
+.form-hint { min-height: 1lh; margin-top: 6px; font-size: 12px; color: var(--color-muted); }
+.form-error { min-height: 1lh; margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--color-focus); }
+.form-alert { padding: 14px 16px; margin-bottom: 22px; border-left: 3px solid var(--color-focus); background: var(--color-wash); font-size: 13px; }
+.form-alert[role="status"] { border-left-color: var(--color-green); }
+.form-checkbox { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; margin-bottom: 22px; }
+.form-checkbox input { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--color-blue); }
+.form-checkbox label { font-size: 13px; line-height: 1.6; }
+.form-fieldset { margin-bottom: 22px; padding: 20px; border: 1px solid var(--color-line); border-radius: var(--radius); }
+.form-fieldset legend { padding-inline: 8px; font-size: 13px; font-weight: 600; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 26px; }
+.form-links { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--color-line); }
+
+@media (max-width: 540px) {
+  .form-panel { padding: 22px 18px; }
+  .form-fieldset { padding: 16px 14px; }
+  .form-actions .button { width: 100%; }
+}
+
 @media (min-width: 1600px) { .home-hero { padding-block: 36px 64px; } .hero-photo { min-height: 580px; } }
 @media (max-width: 1120px) {
   .container { width: calc(100% - 64px); }
