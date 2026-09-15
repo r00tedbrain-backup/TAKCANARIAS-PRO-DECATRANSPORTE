@@ -155,3 +155,30 @@ En ese caso hay que **replicar la zona entera antes del cambio**, incluidos
 `MX`, `SPF`, los CNAME de correo, `autodiscover` y el comodín, y verificar la
 recepción y el envío con un correo de prueba real antes de dar por buena la
 migración. No es necesario para publicar la web.
+
+## Registros añadidos para el envío de correo (15/09/2026)
+
+Verificación del subdominio `avisos.takcanarias.es` en Resend, para que el área
+de alumnos pueda enviar la confirmación de cuenta y el restablecimiento de
+contraseña.
+
+| Nombre | Tipo | Valor |
+| --- | --- | --- |
+| `resend._domainkey.avisos` | TXT | clave pública DKIM de Resend |
+| `rsend.avisos` | CNAME | `rsend-euw1.forge.rmta.net` |
+| `send.avisos` | CNAME | `send.forge.rmta.net` |
+
+Los tres cuelgan de `avisos` y **no modifican ningún registro del correo**.
+Comprobado después de añadirlos: `MX`, `SPF`, el DKIM de DonDominio (`dddk`),
+`webmail` e `imap` mantienen exactamente los mismos valores que antes.
+
+### El DMARC no se ha añadido
+
+Resend lo ofrece como opcional y pide crearlo en `_dmarc`, **sin** el `.avisos`.
+Eso no es el subdominio: es `_dmarc.takcanarias.es`, una política que afectaría
+a **todo el correo del centro**, no solo a estos avisos.
+
+`p=none` solo observa y no rechaza nada, así que el riesgo sería bajo y a medio
+plazo conviene tenerlo. Pero es un cambio sobre el dominio principal y se deja
+para decidirlo aparte, con la titular informada. Alternativa más conservadora:
+crearlo como `_dmarc.avisos`, que afectaría solo a los correos del área.
