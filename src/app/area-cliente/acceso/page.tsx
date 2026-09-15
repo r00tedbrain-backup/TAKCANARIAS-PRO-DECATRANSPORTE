@@ -42,16 +42,16 @@ export default function AccesoPage() {
 
           <div className="form-links">
             <p>
-              <strong>¿Has olvidado la contraseña?</strong> Todavía no podemos enviarte un correo para restablecerla:
-              el envío de correos del área aún no está configurado. Llámanos al{" "}
+              <Link className="text-link" href="/area-cliente/recuperar">
+                He olvidado mi contraseña
+                <Icon name="arrow" />
+              </Link>
+            </p>
+            <p>
+              Si no consigues entrar, llámanos al{" "}
               <a className="text-link" href={site.phoneHref}>
                 <Icon name="phone" />
                 {site.phone}
-              </a>{" "}
-              o escribe a{" "}
-              <a className="text-link" href={`mailto:${site.email}`}>
-                {site.email}
-                <Icon name="arrow" />
               </a>{" "}
               y lo resolvemos contigo.
             </p>

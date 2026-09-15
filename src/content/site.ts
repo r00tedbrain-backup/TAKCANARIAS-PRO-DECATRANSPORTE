@@ -1,3 +1,27 @@
+/**
+ * Datos de la sociedad, facilitados por la titular el 15/09/2026.
+ *
+ * El número de póliza del seguro de responsabilidad civil NO se publica: no
+ * existe obligación de hacerlo y exponerlo no aporta nada al visitante. Consta
+ * en la documentación interna del proyecto.
+ *
+ * Falta por confirmar la inscripción registral (tomo, folio y hoja). Hasta
+ * recibirla, la página de aviso legal lo indica en lugar de inventarla.
+ */
+export const empresa = {
+  razonSocial: "Takcanarias S.L.",
+  formaJuridica: "Sociedad de responsabilidad limitada",
+  cif: "B76294420",
+  domicilioFiscal: "Calle Pintor Nicolás Massieu, 6",
+  codigoPostal: "35018",
+  municipio: "Las Palmas de Gran Canaria",
+  correoTitular: "direccion@takcanarias.es",
+  registroMercantil: null as string | null,
+  homologacionCap: "2725",
+  registroAutoescuela: "GC0308",
+  aseguradoraRC: "Hiscox",
+} as const;
+
 export const site = {
   name: "Takcanarias",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.takcanarias.es",

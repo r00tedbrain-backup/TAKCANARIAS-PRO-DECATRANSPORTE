@@ -14,6 +14,7 @@ import { betterAuth, APIError } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
+import { enviarRestablecer, enviarVerificacion } from "./email";
 import * as schema from "@/db/schema";
 
 export const REGISTRO_ABIERTO = process.env.AREA_ALUMNO_REGISTRO_ABIERTO === "1";
@@ -59,6 +60,21 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     requireEmailVerification: true,
     autoSignIn: false,
+    sendResetPassword: async ({ user, url }) => {
+      await enviarRestablecer(user.email, user.name, url);
+    },
+    resetPasswordTokenExpiresIn: 60 * 60,
+    // Quien cambia la contraseña suele hacerlo porque sospecha que alguien
+    // tiene acceso. Cerrar las demás sesiones es justo lo que espera.
+    revokeSessionsOnPasswordReset: true,
+  },
+
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await enviarVerificacion(user.email, user.name, url);
+    },
   },
 
   session: {
