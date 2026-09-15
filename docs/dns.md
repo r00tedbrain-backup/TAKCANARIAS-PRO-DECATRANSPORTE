@@ -32,6 +32,36 @@ Hallazgos adicionales:
 - El HTTPS del dominio falla por un certificado que no corresponde al nombre
   (documentado en `_scrape/INVENTARIO.md`). Ya está roto hoy, antes de migrar.
 
+## Zona completa leída en el panel (15/09/2026)
+
+Corrige el punto anterior: **sí existe DKIM**, con el selector `dddk`. La
+consulta previa solo probó selectores habituales (`default`, `google`,
+`selector1`) y ninguno era el de DonDominio; la ausencia era del método de
+búsqueda, no del registro.
+
+| Nombre | Tipo | Valor | Función |
+| --- | --- | --- | --- |
+| `takcanarias.es` | ANAME | hostingsrv27.dondominio.com (31.214.178.44) | **Web** |
+| `www` | CNAME | hostingsrv27.dondominio.com. | **Web** |
+| `takcanarias.es` | MX 10 | mx01.dondominio.com. | Correo |
+| `takcanarias.es` | TXT | `v=spf1 include:spf.dondominio.com` | Correo |
+| `dddk._domainkey` | TXT | `v=DKIM1; k=rsa; p=…` | Correo (firma) |
+| `mail` · `imap` · `pop` · `pop3` · `smtp` | CNAME | mailsrv9.dondominio.com. | Correo |
+| `webmail` | CNAME | webmail-09.dondominio.net. | Correo |
+| `autodiscover` · `autoconfig` | CNAME | *.panel247.com. | Correo |
+| `_autodiscover._tcp` | SRV | 0 0 443 autodiscover.panel247.com | Correo |
+| `bbdd` | CNAME | bbddsrv8.dondominio.com. | Base de datos del hosting |
+| `ftp` | CNAME | ftp-server-00.dondominio.net. | FTP del hosting |
+| `*` | CNAME | hostingsrv27.dondominio.com. | Comodín |
+
+**De los 17 registros de la zona, 11 son de correo y solo 2 son de la web.**
+Ese es el argumento concreto para no mover los nameservers: para cambiar dos
+registros se arrastrarían los otros quince.
+
+El registro raíz es **ANAME**, no `A`. Es un alias propio de DonDominio que
+resuelve a la IP del hosting. Para apuntar a una IP fija del VPS hay que
+sustituirlo por un registro `A`.
+
 ## El riesgo del botón "Servidores personalizados"
 
 Cambiar los **nameservers** no mueve solo la web: mueve **toda la zona DNS**.
@@ -53,8 +83,8 @@ del panel DNS de DonDominio, dejando los nameservers como están:
 
 | Registro | Antes | Después |
 | --- | --- | --- |
-| `A` (raíz `@`) | 31.214.178.44 | `<IP_DEL_VPS>` |
-| `www` | CNAME → hostingsrv27 | `A` → `<IP_DEL_VPS>` |
+| `takcanarias.es` (raíz) | ANAME → hostingsrv27.dondominio.com | `A` → `<IP_DEL_VPS>` |
+| `www` | CNAME → hostingsrv27.dondominio.com. | `A` → `<IP_DEL_VPS>` |
 
 Todo lo demás (`MX`, `SPF`, `mail`, `webmail`, `autodiscover`, `ftp`) se queda
 intacto. **El correo no se toca en ningún momento.**
