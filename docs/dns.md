@@ -103,6 +103,51 @@ pero no se borra.
 3. Anotar los valores actuales de esta tabla para poder revertir.
 4. Elegir un momento de baja actividad y avisar antes.
 
+## Runbook del día del cambio
+
+Estado al 15/09/2026: **el VPS existe pero la web todavía no está desplegada**,
+así que la zona DNS se deja intacta. Apuntar el dominio antes de tener la web
+servida dejaría a la titular sin página visible.
+
+Orden correcto:
+
+1. **Desplegar la web en el VPS** y comprobarla por IP, antes de tocar el DNS.
+2. **Preparar el certificado**. El dominio aún no apunta al VPS, así que la
+   validación HTTP de Let's Encrypt no funcionará hasta después del paso 3. Se
+   emite justo después del cambio, o antes mediante validación DNS.
+3. **Editar dos registros** en el panel, en `Dominios → takcanarias.es → Zona DNS`:
+
+   | Nombre | Acción | Valor nuevo |
+   | --- | --- | --- |
+   | `takcanarias.es` | sustituir el `ANAME` por un `A` | IP del VPS |
+   | `www` | sustituir el `CNAME` por un `A` | IP del VPS |
+
+   **No tocar ningún otro registro.** `MX`, `TXT` (SPF), `dddk._domainkey`
+   (DKIM), `mail`, `imap`, `pop`, `pop3`, `smtp`, `webmail`, `autodiscover`,
+   `autoconfig` y `_autodiscover._tcp` se quedan exactamente como están.
+
+4. **Verificar** (aproximadamente un minuto después, TTL 60):
+
+   ```sh
+   dig +short A takcanarias.es @1.1.1.1        # debe dar la IP del VPS
+   dig +short A www.takcanarias.es @1.1.1.1    # debe dar la IP del VPS
+   dig +short MX takcanarias.es @1.1.1.1       # debe seguir: 10 mx01.dondominio.com.
+   dig +short TXT takcanarias.es @1.1.1.1      # debe seguir el SPF de dondominio
+   dig +short TXT dddk._domainkey.takcanarias.es @1.1.1.1   # DKIM intacto
+   ```
+
+5. **Emitir el certificado** y comprobar que `https://takcanarias.es` carga.
+6. **Prueba de correo real**: enviar y recibir un mensaje con una cuenta
+   `@takcanarias.es`. Una consulta DNS correcta no demuestra que el buzón
+   funcione.
+
+**Reversión:** volver a poner el valor anterior en esos dos registros. Con TTL
+de 60 segundos se recupera en aproximadamente un minuto. El WordPress antiguo
+sigue alojado en `hostingsrv27`; deja de verse por el dominio, no se elimina.
+
+No dar de baja el hosting actual hasta que la web nueva lleve tiempo
+funcionando: el correo y la base de datos siguen dependiendo de ese servicio.
+
 ## Si en el futuro se cambian los nameservers
 
 Solo tiene sentido si se quiere gestionar la zona completa fuera de DonDominio.
