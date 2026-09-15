@@ -145,3 +145,84 @@ webhook, el fallo queda en el registro y en el estado del temporizador.
 4. Mover los dos registros DNS del dominio principal (ver `docs/dns.md`).
 5. Decidir si el hosting antiguo se mantiene: **el correo sigue dependiendo de
    ese servicio**.
+
+## Área de alumnos
+
+Desplegada el 15/09/2026 en `nueva.takcanarias.es`. **El registro está cerrado**
+hasta que la titular facilite razón social y NIF y apruebe los textos legales.
+
+Piezas nuevas, todas en Docker dentro del mismo stack:
+
+| Servicio | Imagen | Cometido |
+| --- | --- | --- |
+| `takcanarias` | build propio, Node 22 | Web y área de alumnos |
+| `takcanarias-db` | postgres:17-alpine | Base de datos, volumen `takcanarias_datos` |
+
+El contenedor que servía los estáticos con nginx se sustituyó por la aplicación
+Node. Caddy le hace de proxy al puerto 3000. **El proxy no se recreó**: solo se
+recargó la configuración, sin cortar el DeCA.
+
+La base de datos es independiente de la del DeCA a propósito: aquí hay datos de
+alumnos, parte de ellos menores.
+
+### Cómo se cierra el registro
+
+`AREA_ALUMNO_REGISTRO_ABIERTO` en `/opt/takcanarias/app/.env`. Con valor `0`:
+
+1. La página de registro no muestra el formulario.
+2. Un `hook` en el servidor **rechaza cualquier alta con 403**, venga de donde venga.
+
+El segundo punto no es redundante. En pruebas, con el formulario ya oculto, se
+consiguió crear una cuenta llamando directamente a la API: **ocultar el
+formulario no cierra nada**. La cuenta de prueba se eliminó y se añadió el
+bloqueo en servidor. Comprobado después: `403 REGISTRO_CERRADO` y cero usuarios.
+
+Para abrirlo cuando haya cobertura legal: poner `1`, `docker compose up -d
+takcanarias`, y comprobar que la API deja de devolver 403.
+
+### Migraciones
+
+El SQL se genera en local con `pnpm db:generate`, se revisa y se aplica a mano:
+
+```sh
+docker compose exec -T takcanarias-db psql -U takcanarias -d takcanarias \
+  -v ON_ERROR_STOP=1 < /opt/takcanarias/app/drizzle/NNNN_nombre.sql
+```
+
+No se aplican solas al arrancar: en esta base hay datos de alumnos y un
+reinicio no debe modificar el esquema sin que alguien lo mire.
+
+### Pruebas realizadas
+
+Con el registro abierto de forma temporal, sobre el servidor real:
+
+- Alta, acceso y sesión: correctos.
+- Contraseña incorrecta: rechazada (401).
+- Correo sin verificar: acceso rechazado (403).
+- Panel sin sesión: redirige al acceso.
+- **Aislamiento entre alumnos**: con dos cuentas, ninguna ve el nombre ni el
+  correo de la otra.
+- Límite de intentos: bloquea al cuarto intento fallido (429).
+- Alta por API con el registro cerrado: rechazada (403).
+
+Las cuentas de prueba se borraron. La base quedó con **cero usuarios**.
+
+### Dos fallos que destapó el despliegue
+
+Ninguno se habría visto sin probar contra la base real:
+
+1. **Identificadores nulos.** Better Auth inserta las filas mandando `default`
+   en la columna `id`, y las tablas no tenían valor por defecto. Postgres las
+   rechazaba: fallaban el alta y toda la API de autenticación. Resuelto dando
+   `gen_random_uuid()::text` por defecto a las once tablas.
+2. **Registro cerrado solo de cara.** Descrito arriba.
+
+### Pendiente antes de abrir a alumnos reales
+
+1. **Envío de correo.** `requireEmailVerification` está activo pero no hay
+   proveedor configurado: hoy nadie podría verificar su cuenta ni recuperar la
+   contraseña. Hay que elegir proveedor y darlo de alta antes de abrir.
+2. **Recuperación de contraseña.** No existe la página: depende del punto 1.
+3. **Datos legales de la titular**, incluido el consentimiento de tutores.
+4. **Copias de seguridad de la base.** El volumen persiste, pero no hay copia
+   automática fuera del servidor.

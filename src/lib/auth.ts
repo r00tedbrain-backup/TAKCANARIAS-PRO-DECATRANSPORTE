@@ -10,7 +10,8 @@
  * (falta decidir proveedor). Hasta entonces el registro permanece cerrado,
  * así que no hay cuentas colgadas sin poder validar.
  */
-import { betterAuth } from "better-auth";
+import { betterAuth, APIError } from "better-auth";
+import { createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -71,6 +72,25 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
     database: { generateId: "uuid" },
+  },
+
+  /**
+   * El cierre del registro se aplica aquí, en el servidor.
+   *
+   * Ocultar el formulario no basta: la API de alta sigue siendo pública y
+   * responde a cualquiera que la llame directamente. Comprobado en pruebas,
+   * donde se creó una cuenta con el formulario ya oculto. Mientras no haya
+   * cobertura legal para guardar datos de alumnos, el alta se rechaza aquí.
+   */
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path.startsWith("/sign-up") && !REGISTRO_ABIERTO) {
+        throw new APIError("FORBIDDEN", {
+          message: "El registro de alumnos todavía no está abierto. Contacta con el centro.",
+          code: "REGISTRO_CERRADO",
+        });
+      }
+    }),
   },
 
   rateLimit: {

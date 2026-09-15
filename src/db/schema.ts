@@ -13,14 +13,25 @@
  * registrado la cuenta no debe poder usarse. No guardamos DNI ni dirección
  * del alumno: no hacen falta para esto.
  */
+import { sql } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, integer, bigint, date, uniqueIndex, index } from "drizzle-orm/pg-core";
+
+/**
+ * Identificador primario.
+ *
+ * El valor por defecto lo pone Postgres: Better Auth inserta estas filas
+ * mandando `default` en la columna id, y sin esto la base las rechazaba. Con
+ * el default aquí, el alta funciona sin depender del comportamiento interno
+ * de la librería.
+ */
+const idPrimario = () => text("id").primaryKey().default(sql`gen_random_uuid()::text`);
 
 /* ------------------------------------------------------------------ */
 /* Better Auth: nombres fijados por la librería                        */
 /* ------------------------------------------------------------------ */
 
 export const user = pgTable("user", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
@@ -30,7 +41,7 @@ export const user = pgTable("user", {
 });
 
 export const session = pgTable("session", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -41,7 +52,7 @@ export const session = pgTable("session", {
 });
 
 export const account = pgTable("account", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -57,7 +68,7 @@ export const account = pgTable("account", {
 });
 
 export const verification = pgTable("verification", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
@@ -69,9 +80,14 @@ export const verification = pgTable("verification", {
  * Control de intentos, exigido por `rateLimit.storage: "database"` en auth.ts.
  * Sin esta tabla el límite no se aplica y el acceso queda expuesto a fuerza
  * bruta. Nombres de campo fijados por Better Auth.
+ *
+ * El `id` lleva valor por defecto a propósito: Better Auth inserta estas filas
+ * sin rellenarlo y Postgres las rechazaba, lo que hacía fallar toda la API de
+ * autenticación. Generándolo aquí, la inserción funciona sin depender de cómo
+ * se comporte la librería por dentro.
  */
 export const rateLimit = pgTable("rateLimit", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   key: text("key").notNull().unique(),
   count: integer("count").notNull(),
   lastRequest: bigint("lastRequest", { mode: "number" }).notNull(),
@@ -89,7 +105,7 @@ export const rateLimit = pgTable("rateLimit", {
  * recibe la autorización, no el propio alumno.
  */
 export const perfilAlumno = pgTable("perfil_alumno", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   userId: text("user_id").notNull().unique().references(() => user.id, { onDelete: "cascade" }),
   telefono: text("telefono"),
   fechaNacimiento: date("fecha_nacimiento"),
@@ -108,7 +124,7 @@ export const AMBITOS = ["cap", "autoescuela", "apoyo", "puntos"] as const;
 export type Ambito = (typeof AMBITOS)[number];
 
 export const curso = pgTable("curso", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   nombre: text("nombre").notNull(),
   ambito: text("ambito").notNull(),
   descripcion: text("descripcion"),
@@ -117,7 +133,7 @@ export const curso = pgTable("curso", {
 });
 
 export const matricula = pgTable("matricula", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   cursoId: text("curso_id").notNull().references(() => curso.id, { onDelete: "restrict" }),
   estado: text("estado").default("activa").notNull(),
@@ -135,7 +151,7 @@ export const matricula = pgTable("matricula", {
  * contrate, se apoye en alumnos y matrículas ya existentes.
  */
 export const sesionClase = pgTable("sesion_clase", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   cursoId: text("curso_id").notNull().references(() => curso.id, { onDelete: "cascade" }),
   inicio: timestamp("inicio", { withTimezone: true }).notNull(),
   fin: timestamp("fin", { withTimezone: true }).notNull(),
@@ -147,7 +163,7 @@ export const sesionClase = pgTable("sesion_clase", {
 
 /** Reserva de una sesión. Sin uso hasta que se contrate la agenda. */
 export const reserva = pgTable("reserva", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   sesionId: text("sesion_id").notNull().references(() => sesionClase.id, { onDelete: "cascade" }),
   estado: text("estado").default("solicitada").notNull(),
@@ -156,7 +172,7 @@ export const reserva = pgTable("reserva", {
 
 /** Asistencia registrada por el centro, nunca por el alumno. */
 export const asistencia = pgTable("asistencia", {
-  id: text("id").primaryKey(),
+  id: idPrimario(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   sesionId: text("sesion_id").notNull().references(() => sesionClase.id, { onDelete: "cascade" }),
   presente: boolean("presente").notNull(),
