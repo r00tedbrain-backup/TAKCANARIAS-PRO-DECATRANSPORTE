@@ -152,5 +152,7 @@ export const services: readonly Service[] = [
 export const futureModules = [
   { slug: "deca", title: "DeCA para tu empresa", description: "El Documento Electrónico de Control Administrativo, integrado en el entorno de Takcanarias.", features: ["Acceso para cada empresa", "Gestión de documentos de transporte", "Consulta y descarga de documentos"], note: "Estamos preparando la integración del servicio DeCA. El acceso y la generación de documentos no están disponibles en esta web todavía." },
   { slug: "cursos", title: "Tu formación, también online", description: "Un aula conectada con tu centro, para continuar aprendiendo estés donde estés.", features: ["Acceso a tus cursos", "Materiales y seguimiento del aprendizaje", "Consulta de asistencia"], note: "El aula online está en preparación. Las modalidades, convocatorias y condiciones de cada curso se confirmarán antes de su apertura." },
-  { slug: "area-cliente", title: "Un espacio para seguir avanzando", description: "Tus gestiones como alumno o empresa, reunidas en la web de Takcanarias.", features: ["Reserva de clases y prácticas", "Seguimiento de prácticas y asistencia a cursos", "Acceso a formación y servicios de empresa"], note: "La nueva área privada aún no está abierta. Por ahora, contacta con el centro para gestionar clases, asistencia o documentación. Los accesos existentes a GPS y descarga de tarjeta siguen disponibles." },
+  // "area-cliente" ya no está aquí: dejó de ser un módulo en preparación cuando
+  // el acceso, el panel y las reservas pasaron a funcionar. Su página vive ahora
+  // en src/app/area-cliente/page.tsx.
 ] as const;

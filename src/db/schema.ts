@@ -36,6 +36,16 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  /**
+   * "alumno" o "centro". Quien tiene "centro" gestiona horarios, huecos y
+   * fichas de todos los alumnos.
+   *
+   * El valor por defecto es "alumno" y el registro no lo toca: la única forma
+   * de que alguien sea del centro es que se lo pongan directamente en la base
+   * de datos. Si el alta pudiera fijarlo, bastaría con añadir un campo al
+   * formulario para darse permisos a uno mismo.
+   */
+  rol: text("rol").default("alumno").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
