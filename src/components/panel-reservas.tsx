@@ -85,19 +85,20 @@ export function PanelReservas({
             </p>
           )}
 
-          <div className="service-detail-grid">
+          <div className="fichas-rejilla">
             {reservas.map((r) => (
-              <div className="info-block" key={r.id}>
+              <div className={`ficha${r.anuladaPorElCentro ? " aviso" : ""}`} key={r.id}>
                 <h3>
-                  {dia(r.inicio)}, {hora(r.inicio)}–{hora(r.fin)}
+                  {hora(r.inicio)}–{hora(r.fin)}
                 </h3>
+                <p className="destacado">{dia(r.inicio)}</p>
                 <p>
                   {r.ambito} · {r.alumnoNombre}
                 </p>
                 {r.lugar && <p>Lugar: {r.lugar}</p>}
 
                 {r.anuladaPorElCentro ? (
-                  <p>
+                  <p className="destacado">
                     El centro ha anulado esta hora
                     {r.motivoCancelacion ? `: ${r.motivoCancelacion}` : "."} Te avisaremos para darte otra.
                   </p>
@@ -155,19 +156,24 @@ export function PanelReservas({
             </p>
           </div>
         ) : (
+          // Cada día es un bloque cerrado: cabecera oscura arriba y sus horas
+          // dentro. Con una rejilla suelta, una hora de la columna derecha
+          // parecía pertenecer al día siguiente.
           Object.entries(porDia).map(([elDia, delDia]) => (
-            <div key={elDia}>
-              <h3>{elDia}</h3>
-              <div className="service-detail-grid">
+            <div className="dia-bloque" key={elDia}>
+              <h3 className="dia-cabecera">{elDia}</h3>
+              <div className="dia-horas">
                 {delDia.map((h) => (
-                  <div className="info-block" key={h.id}>
-                    <h3>
+                  <div className="hora-tarjeta" key={h.id}>
+                    <p className="hora">
                       {hora(h.inicio)}–{hora(h.fin)}
-                    </h3>
-                    <p>{h.ambito}</p>
-                    {h.profesor && <p>Con {h.profesor}</p>}
-                    {h.lugar && <p>Lugar: {h.lugar}</p>}
-                    <p>{h.quedan === 1 ? "Queda 1 plaza." : `Quedan ${h.quedan} plazas.`}</p>
+                    </p>
+                    <span className="tipo">{h.ambito}</span>
+                    {h.profesor && <p className="dato">Con {h.profesor}</p>}
+                    {h.lugar && <p className="dato">{h.lugar}</p>}
+                    <p className={`quedan${h.quedan === 1 ? " ultima" : ""}`}>
+                      {h.quedan === 1 ? "Queda 1 plaza" : `Quedan ${h.quedan} plazas`}
+                    </p>
 
                     <form action={enviarReserva}>
                       <input type="hidden" name="sesionId" value={h.id} />
@@ -178,7 +184,7 @@ export function PanelReservas({
                         disabled={reservando || !alumnoId}
                         aria-busy={reservando}
                       >
-                        {reservando ? "Reservando…" : "Reservar esta hora"}
+                        {reservando ? "Reservando…" : "Reservar"}
                         <Icon name="arrow" />
                       </button>
                     </form>

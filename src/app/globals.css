@@ -414,3 +414,115 @@ a:active, button:active { opacity: .8; }
 
 /* Encabezado presente para lectores de pantalla, sin ocupar espacio visual. */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ==================================================================== */
+/* Área privada: alumno y centro                                        */
+/* ==================================================================== */
+/*
+ * Aquí las reglas de la web pública no sirven. En las páginas informativas
+ * el contenido se lee de arriba abajo y basta con separarlo por líneas. En
+ * el área privada cada bloque es una cosa sobre la que se actúa —una hora
+ * que se coge, una ficha que se valida— y tiene que verse dónde empieza y
+ * dónde acaba.
+ *
+ * El borde de la web pública da 1,4:1 de contraste sobre el fondo: a simple
+ * vista no delimita nada. Aquí se sube, y además se apoya en fondo propio y
+ * sombra, porque la separación se percibe por la suma de las tres cosas.
+ */
+
+.dia-bloque { margin-bottom: 34px; }
+
+/* Barra de día: agrupa sus horas de un vistazo. Sin esto, con la rejilla a
+   dos columnas, una hora de la derecha parece pertenecer al día siguiente. */
+.dia-cabecera {
+  background: var(--color-ink);
+  color: var(--color-white);
+  padding: 12px 18px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  font-family: var(--font-display, inherit);
+  font-size: 17px;
+  letter-spacing: .01em;
+  text-transform: capitalize;
+}
+
+.dia-horas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid oklch(72% 0.025 265);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: oklch(96% 0.008 85);
+}
+
+.hora-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid oklch(72% 0.025 265);
+  border-left: 3px solid var(--color-blue);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px oklch(24% 0.04 270 / 14%);
+}
+
+.hora-tarjeta.completa { border-left-color: oklch(70% 0.02 265); opacity: .72; }
+.hora-tarjeta.anulada  { border-left-color: var(--color-muted); background: oklch(95% 0.006 85); }
+
+/* La hora es el dato que se busca, pero 32px la convertían en un titular de
+   portada. A 22px sigue mandando sin gritar. */
+.hora-tarjeta .hora {
+  font-family: var(--font-display, inherit);
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.hora-tarjeta .tipo {
+  align-self: flex-start;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--color-blue);
+  background: var(--color-wash);
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+.hora-tarjeta .dato { font-size: 13px; color: var(--color-muted); margin: 0; }
+.hora-tarjeta .quedan { font-size: 13px; font-weight: 600; color: var(--color-green); margin: 0; }
+.hora-tarjeta .quedan.ultima { color: var(--color-focus); }
+.hora-tarjeta .quedan.sin { color: var(--color-muted); font-weight: 400; }
+.hora-tarjeta form { margin-top: auto; padding-top: 6px; }
+.hora-tarjeta form .button { width: 100%; justify-content: center; }
+
+/* Tarjeta de una hora ya reservada, o de una ficha en el panel del centro. */
+.ficha {
+  padding: 18px;
+  background: var(--color-white);
+  border: 1px solid oklch(72% 0.025 265);
+  border-left: 3px solid var(--color-green);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px oklch(24% 0.04 270 / 14%);
+}
+
+.ficha.aviso    { border-left-color: var(--color-focus); }
+.ficha.apagada  { border-left-color: var(--color-muted); background: oklch(96% 0.006 85); }
+.ficha h3 { font-size: 19px; margin: 0 0 8px; }
+.ficha p  { font-size: 13px; color: var(--color-muted); margin: 0 0 6px; }
+.ficha .destacado { color: var(--color-ink); font-weight: 600; }
+.ficha form { margin-top: 12px; }
+
+.fichas-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .dia-horas, .fichas-rejilla { grid-template-columns: minmax(0, 1fr); }
+  .dia-cabecera { font-size: 15px; padding: 10px 14px; }
+}

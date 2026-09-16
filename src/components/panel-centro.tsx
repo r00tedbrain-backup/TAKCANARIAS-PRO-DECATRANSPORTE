@@ -127,9 +127,9 @@ export function PanelCentro({
           </div>
           <Aviso estado={estValidar} />
 
-          <div className="service-detail-grid">
+          <div className="fichas-rejilla">
             {pendientes.map((p) => (
-              <div className="info-block" key={p.id}>
+              <div className="ficha aviso" key={p.id}>
                 <h3>{p.nombre}</h3>
                 {!p.esElTitular && <p>Menor a cargo de {p.titular}.</p>}
                 {p.fechaNacimiento && <p>Nacido el {p.fechaNacimiento}</p>}
@@ -240,9 +240,9 @@ export function PanelCentro({
             <p>Añade las franjas de arriba y después genera las horas.</p>
           </div>
         ) : (
-          <div className="service-detail-grid">
+          <div className="fichas-rejilla">
             {franjas.map((f) => (
-              <div className="info-block" key={f.id}>
+              <div className="ficha" key={f.id}>
                 <h3>
                   {nombreDia(f.diaSemana)} {f.horaInicio}–{f.horaFin}
                 </h3>
@@ -323,9 +323,9 @@ export function PanelCentro({
             <p>Genera las horas desde el apartado de arriba.</p>
           </div>
         ) : (
-          <div className="service-detail-grid">
+          <div className="fichas-rejilla">
             {horasVisibles.map((h) => (
-              <div className="info-block" key={h.id}>
+              <div className={`ficha${h.anulada ? " apagada" : h.tomadas >= h.plazas ? " aviso" : ""}`} key={h.id}>
                 <h3>
                   {fechaHora(h.inicio)}–{soloHora(h.fin)}
                 </h3>
@@ -371,9 +371,9 @@ export function PanelCentro({
             <h3>Nadie ha reservado todavía</h3>
           </div>
         ) : (
-          <div className="service-detail-grid">
+          <div className="fichas-rejilla">
             {reservas.map((r) => (
-              <div className="info-block" key={r.id}>
+              <div className="ficha" key={r.id}>
                 <h3>
                   {fechaHora(r.inicio)}–{soloHora(r.fin)}
                 </h3>

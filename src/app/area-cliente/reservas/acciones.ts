@@ -19,9 +19,11 @@
  */
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { headers } from "next/headers";
 import { and, count, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { avisarAlCentro } from "@/lib/avisos";
 import { db } from "@/db";
 import { alumno, reserva, sesionClase } from "@/db/schema";
 
@@ -83,11 +85,36 @@ export async function reservarHueco(_previo: EstadoReserva, formData: FormData):
       }
 
       await tx.insert(reserva).values({ alumnoId, sesionId, estado: "activa" });
-      return { ok: true, mensaje: `Hora reservada para ${elAlumno.nombre}.` };
+      return {
+        ok: true,
+        mensaje: `Hora reservada para ${elAlumno.nombre}.`,
+        hueco: { ambito: hueco.ambito, inicio: hueco.inicio, fin: hueco.fin },
+      };
     });
 
-    if (resultado.ok) revalidatePath("/area-cliente/reservas");
-    return resultado;
+    if (resultado.ok) {
+      revalidatePath("/area-cliente/reservas");
+
+      // El aviso sale después de contestar al alumno. Si se enviara aquí
+      // mismo, se quedaría esperando a Resend y a Telegram con la pantalla
+      // parada, y la reserva ya está hecha.
+      if (resultado.hueco) {
+        const datos = resultado.hueco;
+        after(() =>
+          avisarAlCentro({
+            tipo: "nueva",
+            origen: "alumno",
+            alumno: elAlumno.nombre,
+            titular: sesion.user.name,
+            titularEmail: sesion.user.email,
+            ambito: datos.ambito,
+            inicio: datos.inicio,
+            fin: datos.fin,
+          }),
+        );
+      }
+    }
+    return { ok: resultado.ok, mensaje: resultado.mensaje };
   } catch (error) {
     // El índice único salta si ya tenía esa misma hora cogida. Es el único
     // error esperable aquí, y conviene decirlo tal cual en vez de "ha fallado".
@@ -108,7 +135,14 @@ export async function anularReserva(_previo: EstadoReserva, formData: FormData):
   // Se busca la reserva junto con su alumno y se exige que el alumno sea de
   // esta cuenta. Así, un identificador de reserva ajeno no encuentra nada.
   const [fila] = await db
-    .select({ id: reserva.id, inicio: sesionClase.inicio, estado: reserva.estado })
+    .select({
+      id: reserva.id,
+      inicio: sesionClase.inicio,
+      fin: sesionClase.fin,
+      ambito: sesionClase.ambito,
+      alumnoNombre: alumno.nombre,
+      estado: reserva.estado,
+    })
     .from(reserva)
     .innerJoin(alumno, eq(reserva.alumnoId, alumno.id))
     .innerJoin(sesionClase, eq(reserva.sesionId, sesionClase.id))
@@ -127,5 +161,21 @@ export async function anularReserva(_previo: EstadoReserva, formData: FormData):
     .where(eq(reserva.id, reservaId));
 
   revalidatePath("/area-cliente/reservas");
+
+  // Que se libere una hora interesa al centro tanto como que se coja: puede
+  // ofrecérsela a otro alumno.
+  after(() =>
+    avisarAlCentro({
+      tipo: "anulada",
+      origen: "alumno",
+      alumno: fila.alumnoNombre,
+      titular: sesion.user.name,
+      titularEmail: sesion.user.email,
+      ambito: fila.ambito,
+      inicio: fila.inicio,
+      fin: fila.fin,
+    }),
+  );
+
   return { ok: true, mensaje: "Reserva anulada. La hora vuelve a quedar libre." };
 }
