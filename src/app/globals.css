@@ -526,3 +526,63 @@ a:active, button:active { opacity: .8; }
   .dia-horas, .fichas-rejilla { grid-template-columns: minmax(0, 1fr); }
   .dia-cabecera { font-size: 15px; padding: 10px 14px; }
 }
+
+/* Ayuda del panel: apartados que se abren y se cierran. */
+.ayuda-lista { display: grid; gap: 10px; max-width: 900px; }
+
+.ayuda-apartado {
+  background: var(--color-white);
+  border: 1px solid oklch(72% 0.025 265);
+  border-left: 3px solid var(--color-sky);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+
+.ayuda-apartado[open] { border-left-color: var(--color-blue); }
+
+.ayuda-apartado summary {
+  cursor: pointer;
+  display: grid;
+  gap: 3px;
+  /* El triángulo por defecto se pinta pegado al texto y descuadra las dos
+     líneas del resumen. Se sustituye por uno propio, alineado con la primera. */
+  list-style: none;
+  padding-right: 26px;
+  position: relative;
+}
+
+.ayuda-apartado summary::-webkit-details-marker { display: none; }
+
+.ayuda-apartado summary::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--color-blue);
+  border-bottom: 2px solid var(--color-blue);
+  transform: rotate(45deg);
+  transition: transform .18s var(--ease);
+}
+
+.ayuda-apartado[open] summary::after { transform: rotate(-135deg); }
+
+.ayuda-titulo { font-weight: 700; font-size: 16px; color: var(--color-ink); }
+.ayuda-resumen { font-size: 13px; color: var(--color-muted); }
+
+.ayuda-pasos, .ayuda-avisos { margin: 14px 0 0; padding-left: 20px; }
+.ayuda-pasos li, .ayuda-avisos li { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.ayuda-avisos { list-style: none; padding-left: 0; }
+
+/* Los avisos se marcan con una barra lateral, no con un emoji ni un punto de
+   color: el texto sigue leyéndose igual en blanco y negro o en voz alta. */
+.ayuda-avisos li {
+  border-left: 2px solid var(--color-sky);
+  padding-left: 12px;
+  color: var(--color-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ayuda-apartado summary::after { transition: none; }
+}

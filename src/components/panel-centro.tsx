@@ -22,6 +22,7 @@ import {
   type EstadoCentro,
 } from "@/app/centro/acciones";
 import { Icon } from "./icon";
+import { AyudaPanel } from "./ayuda-panel";
 
 const INICIAL: EstadoCentro = { ok: false };
 const ZONA = "Atlantic/Canary";
@@ -526,6 +527,8 @@ export function PanelCentro({
           </div>
         )}
       </section>
+
+      <AyudaPanel />
     </>
   );
 }
