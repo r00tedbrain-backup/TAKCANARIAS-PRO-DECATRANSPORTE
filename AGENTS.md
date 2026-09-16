@@ -25,6 +25,59 @@ Un `noindex` no es un control de acceso: la URL sigue siendo pública.
 - El dominio `takcanarias.es` sigue apuntando al hosting antiguo. El correo de la
   titular vive en esa zona DNS: **no tocar los nameservers**. Ver `docs/dns.md`.
 
+## Convivencia con DeCA en el mismo servidor
+
+El 16 de septiembre de 2026 el despliegue de DeCA sobrescribió el
+`docker-compose.yml` y el `Caddyfile` compartidos y borró de ellos los servicios
+de Takcanarias. Los contenedores siguieron vivos por `restart: always`, pero el
+sitio dejó de servirse en cuanto se recreó el proxy. Se resolvió separando todo
+en **tres proyectos de compose independientes**, y así debe seguir:
+
+| Proyecto | Carpeta | Quién lo toca |
+|---|---|---|
+| `takcanarias` | `/opt/takcanarias/` | solo este agente |
+| `midecapro` | `/opt/midecapro/` | solo el agente de DeCA |
+| `proxy` | `/opt/proxy/` | nadie sin avisar al otro |
+
+Los tres comparten la red externa `infra`. Los dominios se cargan con
+`import sites/*.caddy`: cada proyecto deja su fichero en `/opt/proxy/sites/` y
+**solo toca el suyo**. `takcanarias.caddy` es nuestro; `midecapro.caddy`, suyo.
+
+Reglas acordadas con el otro agente, y que hay que respetar aunque parezcan
+obvias, porque cada una viene de un fallo real:
+
+1. Desplegar solo desde la propia carpeta. Nunca `docker compose` en la del otro.
+2. **Nunca `--remove-orphans`**: desde cualquier lado borra los contenedores del
+   otro, Postgres incluido.
+3. Cambios en el proxy: `caddy validate` antes, `caddy reload` después. Nunca
+   `up --force-recreate` para aplicar configuración.
+4. Copia con fecha en `/root/` antes de cualquier cambio en el servidor.
+5. Nada de memoria: `docker inspect` antes de afirmar cómo está algo.
+6. Si algo no responde pero hace ping, es fail2ban, no el servidor. Mirar antes
+   de reiniciar: reiniciar borra la evidencia.
+
+Detalles que costaron caro y no hay que repetir:
+
+- **El volumen de la base se llama `selfhosted_takcanarias_datos`**, con el
+  prefijo del proyecto antiguo. En el compose va `external: true` con ese nombre.
+  Sin eso, Docker crea uno vacío, Postgres lo inicializa como nuevo y los datos
+  quedan huérfanos sin que falle nada visible.
+- **Ningún `${VARIABLE}` en el compose.** La interpolación no lee el `env_file`:
+  resuelve antes, contra el entorno del shell, y sin él da cadena vacía. Todos
+  los secretos vienen del `env_file`. Comprobado desplegando desde shell limpio.
+- Los certificados viven en el volumen `selfhosted_certificados`, externo al
+  proyecto `proxy`. Por eso el proxy se pudo mover sin renovar nada.
+- Los contenedores se llaman `takcanarias-takcanarias-1` y
+  `takcanarias-takcanarias-db-1`. El nombre de **servicio**, que es lo que usa
+  Caddy, sigue siendo `takcanarias`.
+
+Probado con reinicio completo del VPS el mismo día: SSH volvió en 16 segundos y
+los seis contenedores, las redes y los volúmenes arrancaron solos. Los cuatro
+dominios respondieron sin intervención.
+
+Scripts de referencia en `scripts/`: `separar-proyecto.sh`, `separar-proxy.sh`,
+`rotar-clave-postgres.sh`. Ficheros del despliegue en `deploy/`.
+
 ## La cuenta no es el alumno
 
 El centro da clases de apoyo **desde los 6 años**, y la LOPDGDD fija en **14
