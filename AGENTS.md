@@ -25,11 +25,36 @@ Un `noindex` no es un control de acceso: la URL sigue siendo pública.
 - El dominio `takcanarias.es` sigue apuntando al hosting antiguo. El correo de la
   titular vive en esa zona DNS: **no tocar los nameservers**. Ver `docs/dns.md`.
 
+## La cuenta no es el alumno
+
+El centro da clases de apoyo **desde los 6 años**, y la LOPDGDD fija en **14
+años** la edad mínima para consentir el tratamiento de los propios datos. Un niño
+de 6 años, por tanto, no puede tener cuenta.
+
+El modelo lo refleja: la cuenta (`user`) es de un adulto, y de ella cuelgan uno o
+varios `alumno` mediante `titular_id`. Un adulto que se forma a sí mismo es un
+alumno más, marcado con `es_el_titular`.
+
+**Matrículas, reservas y asistencia cuelgan del alumno, nunca de la cuenta.** Si
+colgasen de la cuenta, dos hermanos compartirían historial. Al añadir tablas
+nuevas, respetar esto.
+
+`consentimiento_tutor_en` solo deja constancia de que existe una autorización
+firmada; la recoge el centro en papel. Mientras esté a null, un alumno menor no
+está dado de alta de verdad.
+
 ## Alcance pendiente solicitado por la clienta
 
 DeCA, aula online de cursos, y área del alumno con reservas, seguimiento de
 prácticas y asistencia. Ver `docs/integraciones.md`. Las páginas actuales son
 informativas: no simular accesos, formularios ni reservas que no existan.
+
+Sobre la **reserva de plazas**: las tablas `sesion_clase`, `reserva` y
+`asistencia` existen pero no se usan. El alcance acordado con el cliente es la
+versión de *solicitud* (el centro publica huecos, el alumno pide uno, el centro
+confirma), no reserva automática. La agenda completa —con profesores, vehículos y
+cancelaciones— va presupuestada aparte y depende de si Facilauto permite
+conectarse. Ver `docs/integraciones.md`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

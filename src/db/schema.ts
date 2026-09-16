@@ -98,26 +98,42 @@ export const rateLimit = pgTable("rateLimit", {
 /* ------------------------------------------------------------------ */
 
 /**
- * Datos del alumno que no son de autenticación.
+ * El alumno: la persona que recibe la formación.
  *
- * `consentimientoTutorEn` es la pieza legal: mientras sea null y el alumno
- * sea menor, la cuenta queda sin validar. Lo rellena el centro cuando
- * recibe la autorización, no el propio alumno.
+ * No es lo mismo que la cuenta. El centro imparte clases de apoyo desde los 6
+ * años, y la ley española no deja que un menor de 14 autorice por sí mismo el
+ * uso de sus datos. Un niño de 6 años, por tanto, no puede tener cuenta: existe
+ * como alumno colgando de la cuenta de su padre, madre o tutor.
+ *
+ * `titularId` es quien gestiona la cuenta:
+ *   - Adulto que se forma él mismo -> es su propia cuenta, `esElTitular` = true.
+ *   - Menor -> la cuenta del tutor, `esElTitular` = false.
+ *
+ * Un titular puede tener varios alumnos a su cargo (varios hijos).
+ *
+ * Matrículas, reservas y asistencia cuelgan del alumno, NO de la cuenta: si no,
+ * los datos de dos hermanos acabarían mezclados bajo el mismo usuario.
  */
-export const perfilAlumno = pgTable("perfil_alumno", {
+export const alumno = pgTable("alumno", {
   id: idPrimario(),
-  userId: text("user_id").notNull().unique().references(() => user.id, { onDelete: "cascade" }),
-  telefono: text("telefono"),
+  titularId: text("titular_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  esElTitular: boolean("es_el_titular").default(false).notNull(),
+  nombre: text("nombre").notNull(),
+  apellidos: text("apellidos"),
   fechaNacimiento: date("fecha_nacimiento"),
-  tutorNombre: text("tutor_nombre"),
-  tutorContacto: text("tutor_contacto"),
+  telefono: text("telefono"),
+  /**
+   * Fecha en que el centro registra la autorización firmada del tutor.
+   * Hoy se recoge en papel, y así seguirá: esto solo deja constancia de que
+   * existe. Sin ella, un alumno menor no debe considerarse dado de alta.
+   */
   consentimientoTutorEn: timestamp("consentimiento_tutor_en"),
-  // Lo valida el centro tras comprobar la identidad. Sin esto, solo puede ver su ficha.
+  // Lo comprueba administración. Hasta entonces, la ficha es solo una solicitud.
   validadoEn: timestamp("validado_en"),
   notasCentro: text("notas_centro"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [index("alumno_por_titular").on(t.titularId)]);
 
 /** Ámbitos del centro. Sirve para saber qué ve cada alumno. */
 export const AMBITOS = ["cap", "autoescuela", "apoyo", "puntos"] as const;
@@ -134,14 +150,14 @@ export const curso = pgTable("curso", {
 
 export const matricula = pgTable("matricula", {
   id: idPrimario(),
-  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  alumnoId: text("alumno_id").notNull().references(() => alumno.id, { onDelete: "cascade" }),
   cursoId: text("curso_id").notNull().references(() => curso.id, { onDelete: "restrict" }),
   estado: text("estado").default("activa").notNull(),
   altaEn: timestamp("alta_en").defaultNow().notNull(),
   bajaEn: timestamp("baja_en"),
 }, (t) => [
-  uniqueIndex("matricula_alumno_curso").on(t.userId, t.cursoId),
-  index("matricula_por_alumno").on(t.userId),
+  uniqueIndex("matricula_alumno_curso").on(t.alumnoId, t.cursoId),
+  index("matricula_por_alumno").on(t.alumnoId),
 ]);
 
 /**
@@ -164,18 +180,18 @@ export const sesionClase = pgTable("sesion_clase", {
 /** Reserva de una sesión. Sin uso hasta que se contrate la agenda. */
 export const reserva = pgTable("reserva", {
   id: idPrimario(),
-  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  alumnoId: text("alumno_id").notNull().references(() => alumno.id, { onDelete: "cascade" }),
   sesionId: text("sesion_id").notNull().references(() => sesionClase.id, { onDelete: "cascade" }),
   estado: text("estado").default("solicitada").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (t) => [uniqueIndex("reserva_alumno_sesion").on(t.userId, t.sesionId)]);
+}, (t) => [uniqueIndex("reserva_alumno_sesion").on(t.alumnoId, t.sesionId)]);
 
 /** Asistencia registrada por el centro, nunca por el alumno. */
 export const asistencia = pgTable("asistencia", {
   id: idPrimario(),
-  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  alumnoId: text("alumno_id").notNull().references(() => alumno.id, { onDelete: "cascade" }),
   sesionId: text("sesion_id").notNull().references(() => sesionClase.id, { onDelete: "cascade" }),
   presente: boolean("presente").notNull(),
   registradoPor: text("registrado_por"),
   registradoEn: timestamp("registrado_en").defaultNow().notNull(),
-}, (t) => [uniqueIndex("asistencia_alumno_sesion").on(t.userId, t.sesionId)]);
+}, (t) => [uniqueIndex("asistencia_alumno_sesion").on(t.alumnoId, t.sesionId)]);

@@ -1,16 +1,19 @@
 "use client";
 
 /**
- * Alta de alumno.
+ * Alta de cuenta.
  *
- * El formulario envía a una server action; la validación real vive allí. Lo
- * de aquí sirve para dos cosas: enseñar los campos del tutor cuando la fecha
- * de nacimiento indica que es menor, y avisar de errores obvios sin esperar
- * al servidor.
+ * Quien rellena esto es siempre un adulto, y la primera pregunta es para quién
+ * es la formación. Va arriba del todo a propósito: cambia el sentido de todos
+ * los campos que vienen detrás. Si es para un menor, los datos personales de
+ * abajo son los del tutor y aparece un bloque aparte para los del alumno.
+ *
+ * La validación real vive en la server action. Lo de aquí sirve para enseñar
+ * los campos que tocan y avisar de errores obvios sin esperar al servidor.
  *
  * La cuenta no queda activa al terminar: el centro tiene que comprobar los
- * datos y, si el alumno es menor, la autorización del tutor. El mensaje final
- * lo dice con esas palabras para que nadie se quede esperando.
+ * datos y, si el alumno es menor, la autorización firmada. El mensaje final lo
+ * dice con esas palabras para que nadie se quede esperando.
  */
 
 import { useActionState, useId, useState } from "react";
@@ -21,8 +24,11 @@ import { site } from "@/content/site";
 
 const ESTADO_INICIAL: EstadoRegistro = { ok: false };
 
+/** Mismo valor que en el servidor: lo fija la LOPDGDD, no nosotros. */
+const EDAD_MINIMA_CUENTA = 14;
+
 /**
- * Copia de la función del servidor. Aquí solo decide qué campos se enseñan;
+ * Copia de la función del servidor. Aquí solo decide qué avisos se enseñan;
  * quien valida el alta es `acciones.ts`.
  */
 function calcularEdad(fechaISO: string): number | null {
@@ -39,6 +45,7 @@ function calcularEdad(fechaISO: string): number | null {
 
 export function FormularioRegistro() {
   const [estado, enviar, pendiente] = useActionState(registrarAlumno, ESTADO_INICIAL);
+  const [paraMenor, setParaMenor] = useState(false);
   const [fechaNacimiento, setFechaNacimiento] = useState("");
 
   const base = useId();
@@ -48,7 +55,7 @@ export function FormularioRegistro() {
 
   const errores = estado.errores ?? {};
   const edad = fechaNacimiento ? calcularEdad(fechaNacimiento) : null;
-  const esMenor = edad !== null && edad >= 0 && edad < 18;
+  const demasiadoJoven = edad !== null && edad >= 0 && edad < EDAD_MINIMA_CUENTA;
 
   const describir = (campo: string, ayuda = false) =>
     [ayuda ? idAyuda(campo) : null, errores[campo] ? idError(campo) : null].filter(Boolean).join(" ") || undefined;
@@ -84,9 +91,45 @@ export function FormularioRegistro() {
         </p>
       )}
 
+      <fieldset className="form-fieldset">
+        <legend>¿Para quién es la formación?</legend>
+        <p className="form-hint">
+          La cuenta la abre siempre una persona adulta. Si el alumno es menor, se le da de alta desde la cuenta de su
+          padre, madre o tutor.
+        </p>
+
+        <div className="form-field form-checkbox">
+          <input
+            id={id("paraMi")}
+            name="paraQuien"
+            type="radio"
+            value="mi"
+            checked={!paraMenor}
+            onChange={() => setParaMenor(false)}
+          />
+          <label className="form-label" htmlFor={id("paraMi")}>
+            Para mí
+          </label>
+        </div>
+
+        <div className="form-field form-checkbox">
+          <input
+            id={id("paraMenor")}
+            name="paraQuien"
+            type="radio"
+            value="menor"
+            checked={paraMenor}
+            onChange={() => setParaMenor(true)}
+          />
+          <label className="form-label" htmlFor={id("paraMenor")}>
+            Para un menor a mi cargo
+          </label>
+        </div>
+      </fieldset>
+
       <div className="form-field">
         <label className="form-label" htmlFor={id("nombre")}>
-          Nombre y apellidos
+          {paraMenor ? "Tu nombre y apellidos (padre, madre o tutor)" : "Nombre y apellidos"}
         </label>
         <input
           className="form-input"
@@ -177,10 +220,10 @@ export function FormularioRegistro() {
 
       <div className="form-field">
         <label className="form-label" htmlFor={id("fechaNacimiento")}>
-          Fecha de nacimiento
+          Tu fecha de nacimiento
         </label>
         <p className="form-hint" id={idAyuda("fechaNacimiento")}>
-          Nos hace falta para saber si la cuenta necesita la autorización de un tutor.
+          Es la de quien abre la cuenta. Hacen falta {EDAD_MINIMA_CUENTA} años cumplidos para tener cuenta propia.
         </p>
         <input
           className="form-input"
@@ -197,6 +240,12 @@ export function FormularioRegistro() {
         {errores.fechaNacimiento && (
           <p className="form-error" id={idError("fechaNacimiento")}>
             {errores.fechaNacimiento}
+          </p>
+        )}
+        {demasiadoJoven && !errores.fechaNacimiento && (
+          <p className="form-error">
+            Con esa fecha no se puede abrir una cuenta. Pídeselo a tu padre, madre o tutor: desde su cuenta puede darte
+            de alta como alumno.
           </p>
         )}
       </div>
@@ -225,52 +274,71 @@ export function FormularioRegistro() {
         )}
       </div>
 
-      {esMenor && (
+      {paraMenor && (
         <fieldset className="form-fieldset">
-          <legend>Datos del padre, madre o tutor</legend>
+          <legend>Datos del alumno</legend>
           <p className="form-hint">
-            Según la fecha que has puesto eres menor de edad. Necesitamos a quién dirigirnos. La cuenta no se activará
-            hasta que el centro confirme la autorización del tutor; no basta con rellenar esto.
+            El alta no se completa hasta que el centro reciba tu autorización firmada. Rellenar esto no basta; te
+            diremos cómo hacerla llegar.
           </p>
 
           <div className="form-field">
-            <label className="form-label" htmlFor={id("tutorNombre")}>
-              Nombre y apellidos del tutor
+            <label className="form-label" htmlFor={id("menorNombre")}>
+              Nombre del alumno
             </label>
             <input
               className="form-input"
-              id={id("tutorNombre")}
-              name="tutorNombre"
+              id={id("menorNombre")}
+              name="menorNombre"
               type="text"
               required
               maxLength={120}
-              aria-invalid={errores.tutorNombre ? true : undefined}
-              aria-describedby={describir("tutorNombre")}
+              aria-invalid={errores.menorNombre ? true : undefined}
+              aria-describedby={describir("menorNombre")}
             />
-            {errores.tutorNombre && (
-              <p className="form-error" id={idError("tutorNombre")}>
-                {errores.tutorNombre}
+            {errores.menorNombre && (
+              <p className="form-error" id={idError("menorNombre")}>
+                {errores.menorNombre}
               </p>
             )}
           </div>
 
           <div className="form-field">
-            <label className="form-label" htmlFor={id("tutorContacto")}>
-              Teléfono o correo del tutor
+            <label className="form-label" htmlFor={id("menorApellidos")}>
+              Apellidos del alumno <span className="form-optional">(opcional)</span>
             </label>
             <input
               className="form-input"
-              id={id("tutorContacto")}
-              name="tutorContacto"
+              id={id("menorApellidos")}
+              name="menorApellidos"
               type="text"
-              required
-              maxLength={120}
-              aria-invalid={errores.tutorContacto ? true : undefined}
-              aria-describedby={describir("tutorContacto")}
+              maxLength={160}
+              aria-invalid={errores.menorApellidos ? true : undefined}
+              aria-describedby={describir("menorApellidos")}
             />
-            {errores.tutorContacto && (
-              <p className="form-error" id={idError("tutorContacto")}>
-                {errores.tutorContacto}
+            {errores.menorApellidos && (
+              <p className="form-error" id={idError("menorApellidos")}>
+                {errores.menorApellidos}
+              </p>
+            )}
+          </div>
+
+          <div className="form-field">
+            <label className="form-label" htmlFor={id("menorFechaNacimiento")}>
+              Fecha de nacimiento del alumno
+            </label>
+            <input
+              className="form-input"
+              id={id("menorFechaNacimiento")}
+              name="menorFechaNacimiento"
+              type="date"
+              required
+              aria-invalid={errores.menorFechaNacimiento ? true : undefined}
+              aria-describedby={describir("menorFechaNacimiento")}
+            />
+            {errores.menorFechaNacimiento && (
+              <p className="form-error" id={idError("menorFechaNacimiento")}>
+                {errores.menorFechaNacimiento}
               </p>
             )}
           </div>
@@ -291,7 +359,8 @@ export function FormularioRegistro() {
           <Link className="text-link" href="/politica-privacidad">
             información de privacidad
           </Link>{" "}
-          y acepto que el centro trate estos datos para gestionar mi alta como alumno.
+          y acepto que el centro trate estos datos para gestionar el alta
+          {paraMenor ? " del alumno que indico" : " como alumno"}.
         </label>
         {errores.privacidad && (
           <p className="form-error" id={idError("privacidad")}>
