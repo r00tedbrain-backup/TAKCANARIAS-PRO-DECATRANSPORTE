@@ -127,12 +127,35 @@ function escaparTelegram(texto: string): string {
   return texto.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, (c) => `\\${c}`);
 }
 
+/**
+ * Telegram es SOLO DE SALIDA y con los datos al mínimo.
+ *
+ * De salida: aquí únicamente se llama a `sendMessage`. No hay webhook, no se
+ * leen mensajes y el bot no puede ejecutar nada sobre la aplicación. Aunque
+ * alguien se colara en el grupo o el token se filtrara, no podría tocar una
+ * reserva ni consultar la base de datos: por este canal no entra nada.
+ *
+ * Al mínimo: un grupo de Telegram es un sitio poco controlado —se reenvía, se
+ * añade gente, queda en el móvil de cualquiera— así que no se manda correo,
+ * teléfono, apellidos ni identificadores. Solo el nombre de pila, el tipo de
+ * clase y la hora, que es lo que hace falta para saber qué ha pasado. Quien
+ * necesite la ficha completa la tiene en el panel, detrás de su contraseña.
+ */
 async function porTelegram(d: DatosAviso): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chat = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chat) return; // Canal no configurado: no es un error.
 
-  const { lineas } = resumen(d);
+  // Solo el nombre de pila: "María Suárez Pérez" viaja como "María".
+  const nombreCorto = d.alumno.trim().split(/\s+/)[0];
+  const titulo = d.tipo === "nueva" ? "Nueva reserva" : "Reserva anulada";
+  const lineas = [
+    `${titulo}${d.origen === "centro" ? " (desde el centro)" : ""}`,
+    `${nombreCorto} · ${AMBITOS[d.ambito] ?? d.ambito}`,
+    cuando(d.inicio, d.fin),
+    "Los datos completos, en el panel.",
+  ];
+
   const texto = `*${escaparTelegram(lineas[0])}*\n${lineas.slice(1).map(escaparTelegram).join("\n")}`;
 
   // Sin esperar indefinidamente: si Telegram no contesta, se abandona el aviso.

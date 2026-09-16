@@ -13,11 +13,37 @@
 import { betterAuth, APIError } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { enviarRestablecer, enviarVerificacion } from "./email";
+import { enviarBienvenidaDelCentro, enviarRestablecer, enviarVerificacion } from "./email";
 import * as schema from "@/db/schema";
 
 export const REGISTRO_ABIERTO = process.env.AREA_ALUMNO_REGISTRO_ABIERTO === "1";
+
+/**
+ * ¿La petición la hace alguien del centro?
+ *
+ * Se resuelve leyendo la sesión que viaja en las cabeceras y comprobando el rol
+ * contra la base de datos. Cualquier fallo se trata como "no": ante la duda,
+ * con el registro cerrado, no se da de alta a nadie.
+ */
+async function laPeticionVieneDelCentro(cabeceras: Headers | undefined): Promise<boolean> {
+  if (!cabeceras) return false;
+  try {
+    const sesion = await auth.api.getSession({ headers: cabeceras });
+    if (!sesion) return false;
+
+    const [quien] = await db
+      .select({ rol: schema.user.rol })
+      .from(schema.user)
+      .where(eq(schema.user.id, sesion.user.id))
+      .limit(1);
+
+    return quien?.rol === "centro";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Durante `next build` no hay credenciales reales: Next carga estos módulos
@@ -60,8 +86,23 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     requireEmailVerification: true,
     autoSignIn: false,
+    /**
+     * El mismo enlace sirve para dos situaciones distintas, y el texto no puede
+     * ser el mismo en ambas.
+     *
+     * Si la cuenta se acaba de crear, quien la recibe es un alumno al que el
+     * centro ha dado de alta: no ha pedido nada y no tiene contraseña que
+     * cambiar. Decirle "has pedido cambiar tu contraseña" le haría pensar que
+     * alguien está trasteando con su cuenta.
+     *
+     * Se distingue por la antigüedad de la cuenta. Un alta del centro dispara
+     * este envío en el mismo segundo; una petición de olvido llega siempre
+     * mucho después.
+     */
     sendResetPassword: async ({ user, url }) => {
-      await enviarRestablecer(user.email, user.name, url);
+      const recienCreada = Date.now() - new Date(user.createdAt).getTime() < 2 * 60 * 1000;
+      if (recienCreada) await enviarBienvenidaDelCentro(user.email, user.name, url);
+      else await enviarRestablecer(user.email, user.name, url);
     },
     resetPasswordTokenExpiresIn: 60 * 60,
     // Quien cambia la contraseña suele hacerlo porque sospecha que alguien
@@ -95,17 +136,25 @@ export const auth = betterAuth({
    *
    * Ocultar el formulario no basta: la API de alta sigue siendo pública y
    * responde a cualquiera que la llame directamente. Comprobado en pruebas,
-   * donde se creó una cuenta con el formulario ya oculto. Mientras no haya
-   * cobertura legal para guardar datos de alumnos, el alta se rechaza aquí.
+   * donde se creó una cuenta con el formulario ya oculto.
+   *
+   * Con el registro cerrado queda una excepción: el propio centro. "Cerrado"
+   * significa que no se puede dar de alta cualquiera desde la calle, no que el
+   * centro no pueda matricular a un alumno. La excepción se comprueba mirando
+   * la sesión de quien hace la petición contra la base de datos, no con una
+   * marca que viaje en la llamada: un dato que llega de fuera lo puede poner
+   * cualquiera, y aquí se está decidiendo quién entra en el sistema.
    */
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path.startsWith("/sign-up") && !REGISTRO_ABIERTO) {
-        throw new APIError("FORBIDDEN", {
-          message: "El registro de alumnos todavía no está abierto. Contacta con el centro.",
-          code: "REGISTRO_CERRADO",
-        });
-      }
+      if (!ctx.path.startsWith("/sign-up") || REGISTRO_ABIERTO) return;
+
+      if (await laPeticionVieneDelCentro(ctx.headers)) return;
+
+      throw new APIError("FORBIDDEN", {
+        message: "El registro de alumnos todavía no está abierto. Contacta con el centro.",
+        code: "REGISTRO_CERRADO",
+      });
     }),
   },
 

@@ -77,3 +77,29 @@ export async function enviarRestablecer(destinatario: string, nombre: string, ur
   });
   if (error) throw new Error(`No se pudo enviar el correo de cambio de contraseña: ${error.message}`);
 }
+
+/**
+ * Bienvenida cuando es el centro quien crea la cuenta.
+ *
+ * Usa el mismo enlace que el restablecimiento, pero el texto no puede ser el
+ * mismo: a quien acaban de dar de alta en mostrador no se le puede decir "has
+ * pedido cambiar tu contraseña", porque no la ha pedido y no tiene ninguna. Un
+ * correo que no cuadra con lo que ha pasado parece un intento de engaño, y lo
+ * razonable es que lo borre.
+ */
+export async function enviarBienvenidaDelCentro(destinatario: string, nombre: string, url: string) {
+  const { error } = await cliente().emails.send({
+    from: REMITENTE,
+    to: [destinatario],
+    subject: "Tu cuenta de alumno en Takcanarias",
+    html: plantilla(
+      `Hola, ${nombre}`,
+      `<p style="margin:0;font-size:15px;line-height:1.7">Te hemos dado de alta en el área de alumnos de Takcanarias. Solo falta que elijas tu contraseña.</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.7">Desde ahí podrás consultar tu ficha y reservar tus horas sin tener que llamar.</p>
+       <p style="margin:12px 0 0;font-size:15px;line-height:1.7">El enlace caduca en una hora. Si se te pasa, entra en «He olvidado mi contraseña» y te llegará otro.</p>`,
+      { texto: "Elegir mi contraseña", url },
+    ),
+    text: `Hola, ${nombre}.\n\nTe hemos dado de alta en el área de alumnos de Takcanarias. Elige tu contraseña aquí:\n${url}\n\nDesde ahí podrás consultar tu ficha y reservar tus horas.\n\nEl enlace caduca en una hora. Si se te pasa, entra en "He olvidado mi contraseña".\n\n${empresa.razonSocial} · ${site.phone}`,
+  });
+  if (error) throw new Error(`No se pudo enviar el correo de bienvenida: ${error.message}`);
+}

@@ -9,10 +9,14 @@
  * la página no protege la acción.
  */
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { and, eq, sql } from "drizzle-orm";
+import { APIError } from "better-auth/api";
+import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { alumno, horarioSemanal, reserva, sesionClase } from "@/db/schema";
+import { alumno, horarioSemanal, reserva, sesionClase, user } from "@/db/schema";
 import { usuarioDelCentro } from "@/lib/centro";
 import { AMBITOS } from "@/db/schema";
 
@@ -196,4 +200,114 @@ export async function anularReservaDesdeCentro(_previo: EstadoCentro, formData: 
   revalidatePath("/centro");
   revalidatePath("/area-cliente/reservas");
   return { ok: true, mensaje: "Reserva anulada. La hora vuelve a quedar libre." };
+}
+
+/**
+ * Alta de un alumno hecha por el centro.
+ *
+ * Es la vía normal de dar de alta: el registro público está cerrado porque
+ * prefieren controlar ellos quién entra.
+ *
+ * NO se genera una contraseña para mandársela al alumno. Una contraseña
+ * enviada por correo queda escrita para siempre en dos buzones y la gente no
+ * la cambia nunca. En su lugar, la cuenta nace con una contraseña aleatoria
+ * larga que no conoce nadie —ni el centro— y al alumno le llega un enlace para
+ * poner la suya. El centro nunca ve la contraseña de nadie, que es como debe
+ * ser.
+ *
+ * El correo se marca como verificado: lo ha comprobado el centro al dar el
+ * alta, y hacer que el alumno confirme un correo que le acaban de dar en
+ * mostrador sobra.
+ */
+export async function crearCuentaAlumno(_previo: EstadoCentro, formData: FormData): Promise<EstadoCentro> {
+  if (!(await usuarioDelCentro())) return SIN_PERMISO;
+
+  const nombre = texto(formData, "nombre");
+  const email = texto(formData, "email").toLowerCase();
+  const telefono = texto(formData, "telefono");
+  const fechaNacimiento = texto(formData, "fechaNacimiento");
+  const esMenor = formData.get("esMenor") === "on";
+  const nombreAlumno = texto(formData, "nombreAlumno");
+  const apellidosAlumno = texto(formData, "apellidosAlumno");
+
+  if (!nombre) return { ok: false, mensaje: "Escribe el nombre de la persona titular de la cuenta." };
+  if (nombre.length > 120) return { ok: false, mensaje: "El nombre es demasiado largo." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, mensaje: "Ese correo no es válido." };
+  if (telefono && !/^[+\d][\d\s().-]{6,19}$/.test(telefono)) {
+    return { ok: false, mensaje: "Ese teléfono no parece correcto." };
+  }
+  if (fechaNacimiento && !/^\d{4}-\d{2}-\d{2}$/.test(fechaNacimiento)) {
+    return { ok: false, mensaje: "La fecha de nacimiento no es válida." };
+  }
+  if (esMenor && !nombreAlumno) {
+    return { ok: false, mensaje: "Si la cuenta es para un menor, escribe el nombre del alumno." };
+  }
+
+  // Aleatoria y larga. No se guarda, no se enseña y no se envía: solo existe
+  // para que la cuenta no quede sin contraseña hasta que el alumno ponga la suya.
+  const provisional = randomBytes(24).toString("base64url");
+
+  let userId: string;
+  try {
+    // Se pasan las cabeceras de quien está en el panel: es lo que permite al
+    // hook de Better Auth ver que este alta la hace el centro y dejarla pasar
+    // aunque el registro público esté cerrado.
+    const creado = await auth.api.signUpEmail({
+      body: { name: nombre, email, password: provisional },
+      headers: await headers(),
+    });
+    userId = creado.user.id;
+  } catch (error) {
+    if (error instanceof APIError) {
+      if (error.body?.code === "USER_ALREADY_EXISTS") {
+        return { ok: false, mensaje: "Ya existe una cuenta con ese correo." };
+      }
+      return { ok: false, mensaje: error.body?.message ?? "No se ha podido crear la cuenta." };
+    }
+    return { ok: false, mensaje: "No se ha podido crear la cuenta. Inténtalo de nuevo." };
+  }
+
+  const ahora = new Date();
+
+  // El correo lo ha comprobado el centro al dar el alta.
+  await db.update(user).set({ emailVerified: true, updatedAt: ahora }).where(eq(user.id, userId));
+
+  // La ficha del alumno, ya validada: la está creando el propio centro.
+  await db.insert(alumno).values(
+    esMenor
+      ? {
+          titularId: userId,
+          esElTitular: false,
+          nombre: nombreAlumno,
+          apellidos: apellidosAlumno || null,
+          fechaNacimiento: fechaNacimiento || null,
+          telefono: telefono || null,
+          validadoEn: ahora,
+        }
+      : {
+          titularId: userId,
+          esElTitular: true,
+          nombre,
+          fechaNacimiento: fechaNacimiento || null,
+          telefono: telefono || null,
+          validadoEn: ahora,
+        },
+  );
+
+  // Enlace para que ponga su contraseña. Si el correo fallara, la cuenta queda
+  // creada igualmente y se puede reenviar desde la pantalla de acceso, así que
+  // no se deshace nada: se avisa y se sigue.
+  let avisoCorreo = "Le hemos enviado un correo para que ponga su contraseña.";
+  try {
+    await auth.api.requestPasswordReset({
+      body: { email, redirectTo: "/area-cliente/nueva-contrasena" },
+      headers: await headers(),
+    });
+  } catch {
+    avisoCorreo =
+      "La cuenta está creada, pero no hemos podido enviarle el correo. Dile que entre en «He olvidado mi contraseña».";
+  }
+
+  revalidatePath("/centro");
+  return { ok: true, mensaje: `Cuenta creada para ${esMenor ? nombreAlumno : nombre}. ${avisoCorreo}` };
 }

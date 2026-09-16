@@ -99,6 +99,32 @@ export default async function CentroPage() {
     })
     .from(alumno);
 
+  // Listado de cuentas con los alumnos que cuelgan de cada una. Es el "quién
+  // está dado de alta" que el centro necesita para el día a día.
+  const cuentas = await db
+    .select({
+      id: user.id,
+      nombre: user.name,
+      email: user.email,
+      correoVerificado: user.emailVerified,
+      rol: user.rol,
+      alta: user.createdAt,
+      alumnos: sql<string>`
+        COALESCE(
+          string_agg(
+            ${alumno.nombre} || COALESCE(' ' || ${alumno.apellidos}, '')
+              || CASE WHEN ${alumno.validadoEn} IS NULL THEN ' (sin validar)' ELSE '' END,
+            ' · ' ORDER BY ${alumno.createdAt}
+          ),
+          ''
+        )`,
+    })
+    .from(user)
+    .leftJoin(alumno, eq(alumno.titularId, user.id))
+    .groupBy(user.id)
+    .orderBy(desc(user.createdAt))
+    .limit(200);
+
   return (
     <div className="container">
       <nav className="breadcrumb" aria-label="Ruta de navegación">
@@ -145,6 +171,15 @@ export default async function CentroPage() {
           tieneAutorizacion: Boolean(p.consentimientoTutorEn),
           titular: p.titularNombre,
           titularEmail: p.titularEmail,
+        }))}
+        cuentas={cuentas.map((c) => ({
+          id: c.id,
+          nombre: c.nombre,
+          email: c.email,
+          correoVerificado: c.correoVerificado,
+          esDelCentro: c.rol === "centro",
+          alta: c.alta.toISOString(),
+          alumnos: c.alumnos,
         }))}
       />
     </div>

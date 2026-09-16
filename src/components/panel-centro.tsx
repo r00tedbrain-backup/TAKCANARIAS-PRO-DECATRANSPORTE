@@ -13,6 +13,7 @@
 import { useActionState, useId, useState } from "react";
 import {
   anadirFranja,
+  crearCuentaAlumno,
   anularHora,
   anularReservaDesdeCentro,
   borrarFranja,
@@ -63,6 +64,15 @@ function soloHora(iso: string): string {
 type Franja = { id: string; ambito: string; diaSemana: number; horaInicio: string; horaFin: string; plazas: number };
 type Hora = { id: string; ambito: string; inicio: string; fin: string; plazas: number; tomadas: number; anulada: boolean };
 type ReservaFila = { id: string; alumno: string; titular: string; titularEmail: string; ambito: string; inicio: string; fin: string };
+type Cuenta = {
+  id: string;
+  nombre: string;
+  email: string;
+  correoVerificado: boolean;
+  esDelCentro: boolean;
+  alta: string;
+  alumnos: string;
+};
 type Pendiente = {
   id: string;
   nombre: string;
@@ -90,6 +100,7 @@ export function PanelCentro({
   horas,
   reservas,
   pendientes,
+  cuentas,
 }: {
   responsable: string;
   totales: { alumnos: number; validados: number };
@@ -97,6 +108,7 @@ export function PanelCentro({
   horas: Hora[];
   reservas: ReservaFila[];
   pendientes: Pendiente[];
+  cuentas: Cuenta[];
 }) {
   const [estAnadir, accAnadir, anadiendo] = useActionState(anadirFranja, INICIAL);
   const [estBorrar, accBorrar, borrando] = useActionState(borrarFranja, INICIAL);
@@ -104,9 +116,11 @@ export function PanelCentro({
   const [estAnular, accAnular, anulando] = useActionState(anularHora, INICIAL);
   const [estValidar, accValidar, validando] = useActionState(validarAlumno, INICIAL);
   const [estAnulRes, accAnulRes, anulandoRes] = useActionState(anularReservaDesdeCentro, INICIAL);
+  const [estCrear, accCrear, creando] = useActionState(crearCuentaAlumno, INICIAL);
 
   const base = useId();
   const [verAnuladas, setVerAnuladas] = useState(false);
+  const [altaParaMenor, setAltaParaMenor] = useState(false);
   const horasVisibles = verAnuladas ? horas : horas.filter((h) => !h.anulada);
 
   return (
@@ -118,6 +132,92 @@ export function PanelCentro({
           {pendientes.length > 0 && ` ${pendientes.length} fichas esperando revisión.`}
         </p>
       </header>
+
+      <section className="section" aria-labelledby="alta">
+        <div className="section-heading">
+          <h2 id="alta">Dar de alta a un alumno</h2>
+          <p>
+            Se le enviará un correo para que elija su contraseña. Nadie del centro llega a ver la contraseña de un
+            alumno, tampoco nosotros.
+          </p>
+        </div>
+
+        <Aviso estado={estCrear} />
+
+        <form className="form-panel" action={accCrear}>
+          <div className="form-field form-checkbox">
+            <input
+              id={`${base}-menor`}
+              name="esMenor"
+              type="checkbox"
+              checked={altaParaMenor}
+              onChange={(e) => setAltaParaMenor(e.target.checked)}
+            />
+            <label className="form-label" htmlFor={`${base}-menor`}>
+              El alumno es menor y la cuenta es de su padre, madre o tutor
+            </label>
+          </div>
+
+          <div className="form-field">
+            <label className="form-label" htmlFor={`${base}-nombre`}>
+              {altaParaMenor ? "Nombre del tutor" : "Nombre y apellidos"}
+            </label>
+            <input className="form-input" id={`${base}-nombre`} name="nombre" type="text" required maxLength={120} />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label" htmlFor={`${base}-email`}>
+              Correo {altaParaMenor ? "del tutor" : "del alumno"}
+            </label>
+            <p className="form-hint">Ahí llegará el enlace para entrar. Comprueba que está bien escrito.</p>
+            <input className="form-input" id={`${base}-email`} name="email" type="email" required />
+          </div>
+
+          <div className="form-field">
+            <label className="form-label" htmlFor={`${base}-tel`}>
+              Teléfono <span className="form-optional">(opcional)</span>
+            </label>
+            <input className="form-input" id={`${base}-tel`} name="telefono" type="tel" />
+          </div>
+
+          {altaParaMenor ? (
+            <>
+              <div className="form-field">
+                <label className="form-label" htmlFor={`${base}-nalum`}>
+                  Nombre del alumno
+                </label>
+                <input className="form-input" id={`${base}-nalum`} name="nombreAlumno" type="text" maxLength={120} />
+              </div>
+              <div className="form-field">
+                <label className="form-label" htmlFor={`${base}-aalum`}>
+                  Apellidos del alumno <span className="form-optional">(opcional)</span>
+                </label>
+                <input className="form-input" id={`${base}-aalum`} name="apellidosAlumno" type="text" maxLength={160} />
+              </div>
+              <div className="form-field">
+                <label className="form-label" htmlFor={`${base}-fnac`}>
+                  Fecha de nacimiento del alumno
+                </label>
+                <input className="form-input" id={`${base}-fnac`} name="fechaNacimiento" type="date" />
+              </div>
+            </>
+          ) : (
+            <div className="form-field">
+              <label className="form-label" htmlFor={`${base}-fnac`}>
+                Fecha de nacimiento <span className="form-optional">(opcional)</span>
+              </label>
+              <input className="form-input" id={`${base}-fnac`} name="fechaNacimiento" type="date" />
+            </div>
+          )}
+
+          <div className="form-actions">
+            <button className="button button-blue" type="submit" disabled={creando} aria-busy={creando}>
+              {creando ? "Creando la cuenta…" : "Crear cuenta y avisar"}
+              <Icon name="arrow" />
+            </button>
+          </div>
+        </form>
+      </section>
 
       {pendientes.length > 0 && (
         <section className="section" aria-labelledby="pendientes">
@@ -352,6 +452,38 @@ export function PanelCentro({
                     </button>
                   </form>
                 )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="section" aria-labelledby="cuentas-heading">
+        <div className="section-heading">
+          <h2 id="cuentas-heading">Cuentas dadas de alta</h2>
+          <p>
+            {cuentas.length === 1 ? "1 cuenta" : `${cuentas.length} cuentas`} en total. Una cuenta puede tener varios
+            alumnos: los hermanos van juntos bajo la del padre o la madre.
+          </p>
+        </div>
+
+        {cuentas.length === 0 ? (
+          <div className="ficha">
+            <h3>Todavía no hay ninguna cuenta</h3>
+            <p>Crea la primera desde el formulario de arriba.</p>
+          </div>
+        ) : (
+          <div className="fichas-rejilla">
+            {cuentas.map((c) => (
+              <div className={`ficha${c.esDelCentro ? "" : c.alumnos ? "" : " aviso"}`} key={c.id}>
+                <h3>{c.nombre}</h3>
+                <p className="destacado">{c.email}</p>
+                {c.esDelCentro && <p className="destacado">Personal del centro</p>}
+                <p>{c.alumnos ? `Alumnos: ${c.alumnos}` : "Sin ninguna ficha de alumno"}</p>
+                <p>
+                  Alta: {fechaHora(c.alta)}
+                  {c.correoVerificado ? "" : " · correo sin verificar"}
+                </p>
               </div>
             ))}
           </div>
