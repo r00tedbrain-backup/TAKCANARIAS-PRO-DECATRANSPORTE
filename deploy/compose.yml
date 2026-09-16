@@ -1,0 +1,101 @@
+# Takcanarias: proyecto propio, separado del de DeCA.
+#
+# Hasta ahora estos dos servicios vivían dentro del docker-compose.yml de
+# midecapro. Eso nos costó un incidente: su despliegue sobrescribe el fichero
+# entero y se llevó por delante la definición de estos servicios. Los
+# contenedores siguieron vivos por `restart: always`, pero el sitio dejó de
+# servirse al recrearse el proxy.
+#
+# Se instala en /opt/takcanarias/compose.yml y se despliega desde ahí:
+#
+#     cd /opt/takcanarias && docker compose up -d
+#
+# Sin exportar nada antes: todos los secretos vienen del env_file. Si aquí
+# apareciera un ${...}, volveríamos al fallo de la interpolación, que no lee el
+# env_file y resuelve a cadena vacía en silencio.
+
+name: takcanarias
+
+services:
+  # Aplicación Next.js en modo standalone. Escucha en el 3000, no en el 80:
+  # ya no es un nginx sirviendo ficheros estáticos.
+  takcanarias:
+    build: /opt/takcanarias/app
+    image: takcanarias-web
+    restart: always
+    env_file:
+      - /opt/takcanarias/app/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      takcanarias-db:
+        condition: service_healthy
+    networks:
+      - infra
+      - proxy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - node -e "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Base de datos del área del alumno.
+  # No publica ningún puerto: solo se llega desde la red interna de Docker.
+  takcanarias-db:
+    image: postgres:17-alpine
+    restart: always
+    env_file:
+      - /opt/takcanarias/app/.env
+    environment:
+      POSTGRES_USER: takcanarias
+      POSTGRES_DB: takcanarias
+    volumes:
+      - datos:/var/lib/postgresql/data
+    networks:
+      - infra
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U takcanarias -d takcanarias
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  # EXTERNO Y CON EL NOMBRE COMPLETO. Esto es lo único irreversible de todo el
+  # traslado: el volumen se llama así porque lo creó el proyecto "selfhosted" y
+  # Docker le antepuso ese prefijo. Si se declarara sin `external`, Docker
+  # crearía uno vacío, Postgres lo inicializaría como nuevo y los datos de los
+  # alumnos quedarían huérfanos sin que fallara nada visible: la web seguiría
+  # respondiendo y solo se notaría cuando alguien no pudiera entrar.
+  datos:
+    external: true
+    name: selfhosted_takcanarias_datos
+
+networks:
+  # Red compartida a la que iremos moviendo todo. La creó el agente de DeCA.
+  infra:
+    external: true
+    name: infra
+
+  # Red donde vive Caddy hoy. Sigue haciendo falta: el proxy todavía está en el
+  # proyecto de midecapro y solo alcanza lo que esté en su red. Cuando el proxy
+  # se saque a su propio proyecto y se enganche a `infra`, esta se quita de aquí
+  # y quedamos del todo desacoplados.
+  proxy:
+    external: true
+    name: selfhosted_default
