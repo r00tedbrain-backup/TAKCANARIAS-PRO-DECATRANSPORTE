@@ -1,0 +1,58 @@
+# Proxy compartido: Caddy en su propio proyecto.
+#
+# No pertenece a ninguno de los dos proyectos que sirve. Cada uno deja su
+# fichero de dominios en sites/ y no toca nada más. Este compose y el Caddyfile
+# raíz no se cambian sin avisar al otro.
+#
+# Los dos volúmenes son los que ya existían en el proyecto "selfhosted". Se
+# declaran externos y con su nombre completo para que el proxy arranque con los
+# certificados ya emitidos: sin eso, Caddy los pediría de nuevo a Let's Encrypt
+# y el sitio estaría sin TLS mientras tanto.
+#
+# Se instala en /opt/proxy/compose.yml y se levanta con:
+#
+#     cd /opt/proxy && docker compose up -d
+#
+# Para aplicar un cambio en sites/ NO se recrea el contenedor:
+#
+#     docker exec proxy-proxy-1 caddy validate --config /etc/caddy/Caddyfile
+#     docker exec proxy-proxy-1 caddy reload   --config /etc/caddy/Caddyfile
+
+name: proxy
+
+services:
+  proxy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites:/etc/caddy/sites:ro
+      - certificados:/data
+      - configuracion:/config
+    # El host resuelve por systemd-resolved en 127.0.0.53, que dentro del
+    # contenedor no existe: sin esto Caddy no puede hablar con Let's Encrypt.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    networks:
+      - infra
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  certificados:
+    external: true
+    name: selfhosted_certificados
+  configuracion:
+    external: true
+    name: selfhosted_configuracion_proxy
+
+networks:
+  infra:
+    external: true

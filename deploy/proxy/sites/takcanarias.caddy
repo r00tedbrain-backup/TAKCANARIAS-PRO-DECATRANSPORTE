@@ -1,0 +1,11 @@
+# Dominios de Takcanarias.
+#
+# Este fichero va en /opt/proxy/sites/takcanarias.caddy y SOLO lo toca el
+# agente de Takcanarias. El otro proyecto tiene el suyo en la misma carpeta.
+
+# Web y área del alumno (subdominio de pruebas hasta mover el dominio principal).
+# Next.js en Node: escucha en el 3000, no en el 80.
+nueva.takcanarias.es {
+	encode gzip
+	reverse_proxy takcanarias:3000
+}

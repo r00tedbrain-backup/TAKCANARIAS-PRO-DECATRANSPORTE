@@ -1,0 +1,7 @@
+# Caddyfile raíz. No lleva dominios: solo carga los ficheros de sites/.
+#
+# Cada proyecto escribe el suyo ahí y no toca este. Así ningún despliegue puede
+# borrar los dominios del otro, que es exactamente lo que pasó cuando todo
+# estaba en un único fichero.
+
+import sites/*.caddy

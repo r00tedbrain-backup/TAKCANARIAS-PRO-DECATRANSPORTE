@@ -34,7 +34,6 @@ services:
         condition: service_healthy
     networks:
       - infra
-      - proxy
     healthcheck:
       test:
         - CMD-SHELL
@@ -87,15 +86,9 @@ volumes:
     name: selfhosted_takcanarias_datos
 
 networks:
-  # Red compartida a la que iremos moviendo todo. La creó el agente de DeCA.
+  # Red compartida con el proxy y con DeCA. Es la única: el proxy vive en su
+  # propio proyecto y alcanza a todos por aquí.
   infra:
     external: true
     name: infra
 
-  # Red donde vive Caddy hoy. Sigue haciendo falta: el proxy todavía está en el
-  # proyecto de midecapro y solo alcanza lo que esté en su red. Cuando el proxy
-  # se saque a su propio proyecto y se enganche a `infra`, esta se quita de aquí
-  # y quedamos del todo desacoplados.
-  proxy:
-    external: true
-    name: selfhosted_default
