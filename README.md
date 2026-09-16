@@ -3,9 +3,10 @@
 Reconstrucción de la web de asesoría de transportes, formación CAP, autoescuela
 y apoyo escolar. **Versión de revisión; no sustituye la web del dominio de la clienta.**
 
-DeCA, aula online y área de cliente tienen páginas de presentación, no acceso
-privado operativo. Se conserva el alcance solicitado de reservas, seguimiento
-de prácticas y asistencia a cursos. No se ha modificado el proyecto DeCA existente.
+DeCA y aula online tienen páginas de presentación, no acceso operativo. El área
+del alumno sí funciona: registro, acceso, recuperación de contraseña y panel,
+sobre PostgreSQL. Queda pendiente el alcance de reservas, seguimiento de
+prácticas y asistencia. No se ha modificado el proyecto DeCA existente.
 
 ## Stack real
 
@@ -14,10 +15,31 @@ de prácticas y asistencia a cursos. No se ha modificado el proyecto DeCA existe
 - TypeScript **5.9.3** y Tailwind **4.3.3**, según el lockfile.
 - pnpm **10.33.0**, fijado por el scaffold existente, sin cambios al gestor global.
 - Manrope y Barlow Condensed mediante `next/font`.
-- Sin CMS, base de datos, autenticación ni librerías añadidas de animación.
+- Better Auth **1.7.5** y Drizzle **0.45.2** sobre PostgreSQL **17**.
+- Resend **6.28.0** para verificación de cuenta y recuperación de contraseña.
+- Sin CMS ni librerías añadidas de animación.
 
 Verificado con Node 22.11.0. Consultar la documentación real de Next en
 `node_modules/next/dist/docs/` antes de cambiar sus APIs.
+
+## La cuenta no es el alumno
+
+El centro da clases de apoyo **desde los 6 años**, y la ley exige **14** para que
+alguien consienta el tratamiento de sus propios datos. Un niño de 6 años, por
+tanto, no puede tener cuenta.
+
+Por eso la cuenta (`user`) es siempre de un adulto, y de ella cuelgan uno o
+varios `alumno` a través de `titular_id`. Un adulto que se forma a sí mismo es un
+alumno más, marcado con `es_el_titular`.
+
+**Matrículas, reservas y asistencia cuelgan del alumno, nunca de la cuenta.** No
+es un detalle de estilo: si colgasen de la cuenta, dos hermanos compartirían
+historial y luego no habría forma de separarlos. Al añadir tablas nuevas,
+mantener esta regla.
+
+`consentimiento_tutor_en` solo deja constancia de que existe una autorización
+firmada; la recoge el centro en papel. Mientras esté a null, un alumno menor no
+está dado de alta de verdad.
 
 ## Desarrollo y comprobación
 
