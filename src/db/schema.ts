@@ -161,30 +161,77 @@ export const matricula = pgTable("matricula", {
 ]);
 
 /**
- * Sesión concreta: una clase con fecha y hora.
+ * Horario habitual de la semana: la plantilla desde la que se generan los huecos.
  *
- * Todavía no se usa. Existe para que la reserva de agenda, cuando se
- * contrate, se apoye en alumnos y matrículas ya existentes.
+ * El centro llevaba la agenda en papel. Pedirles que creen los huecos uno a uno
+ * sería cambiarles un trabajo manual por otro, así que describen una vez cómo es
+ * una semana normal y los huecos se generan a partir de aquí.
+ *
+ * `plazas` son las clases que pueden dar a la vez en esa franja. En autoescuela
+ * eso es, en la práctica, cuántos coches tienen libres.
+ */
+export const horarioSemanal = pgTable("horario_semanal", {
+  id: idPrimario(),
+  ambito: text("ambito").notNull(),
+  /** 1 = lunes … 7 = domingo. Mismo criterio que ISO, para no discutir domingos. */
+  diaSemana: integer("dia_semana").notNull(),
+  horaInicio: text("hora_inicio").notNull(),
+  horaFin: text("hora_fin").notNull(),
+  plazas: integer("plazas").default(1).notNull(),
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [index("horario_por_ambito_dia").on(t.ambito, t.diaSemana)]);
+
+/**
+ * Hueco concreto: una clase con su fecha y su hora.
+ *
+ * El curso es opcional a propósito. Una práctica de coche no pertenece a ningún
+ * curso: es una hora con un profesor y un vehículo. Obligar a inventarse un
+ * curso "Prácticas" solo para rellenar el hueco sería forzar el modelo. Lo que
+ * siempre hay es un ámbito.
+ *
+ * `canceladaEn` cubre las excepciones —un festivo, un coche en el taller— sin
+ * borrar el hueco, para que quien tuviera reserva pueda ver qué pasó.
  */
 export const sesionClase = pgTable("sesion_clase", {
   id: idPrimario(),
-  cursoId: text("curso_id").notNull().references(() => curso.id, { onDelete: "cascade" }),
+  ambito: text("ambito").notNull(),
+  cursoId: text("curso_id").references(() => curso.id, { onDelete: "cascade" }),
   inicio: timestamp("inicio", { withTimezone: true }).notNull(),
   fin: timestamp("fin", { withTimezone: true }).notNull(),
   plazas: integer("plazas").default(1).notNull(),
   profesor: text("profesor"),
   lugar: text("lugar"),
+  canceladaEn: timestamp("cancelada_en"),
+  motivoCancelacion: text("motivo_cancelacion"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (t) => [index("sesion_por_curso_inicio").on(t.cursoId, t.inicio)]);
+}, (t) => [
+  index("sesion_por_ambito_inicio").on(t.ambito, t.inicio),
+  // Evita duplicar el mismo hueco si la generación se lanza dos veces.
+  uniqueIndex("sesion_unica_por_franja").on(t.ambito, t.inicio, t.fin),
+]);
 
-/** Reserva de una sesión. Sin uso hasta que se contrate la agenda. */
+/**
+ * Reserva de un hueco.
+ *
+ * Estados: "activa" y "anulada". No hay "pendiente": el alumno reserva y queda
+ * hecho, que es justo lo que pidió el centro para dejar de coger el teléfono.
+ *
+ * El índice único impide que el mismo alumno coja dos veces el mismo hueco. Lo
+ * que NO impide, y por eso la reserva va dentro de una transacción con bloqueo,
+ * es que dos alumnos distintos agoten las plazas a la vez.
+ */
 export const reserva = pgTable("reserva", {
   id: idPrimario(),
   alumnoId: text("alumno_id").notNull().references(() => alumno.id, { onDelete: "cascade" }),
   sesionId: text("sesion_id").notNull().references(() => sesionClase.id, { onDelete: "cascade" }),
-  estado: text("estado").default("solicitada").notNull(),
+  estado: text("estado").default("activa").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (t) => [uniqueIndex("reserva_alumno_sesion").on(t.alumnoId, t.sesionId)]);
+  anuladaEn: timestamp("anulada_en"),
+}, (t) => [
+  uniqueIndex("reserva_alumno_sesion").on(t.alumnoId, t.sesionId),
+  index("reserva_por_sesion").on(t.sesionId),
+]);
 
 /** Asistencia registrada por el centro, nunca por el alumno. */
 export const asistencia = pgTable("asistencia", {

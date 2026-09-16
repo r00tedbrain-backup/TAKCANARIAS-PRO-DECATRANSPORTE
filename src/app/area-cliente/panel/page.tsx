@@ -179,12 +179,27 @@ export default async function PanelPage() {
           )}
         </section>
 
+        {alumnos.some((a) => a.validadoEn) && (
+          <section className="section" aria-labelledby="reservas-heading">
+            <div className="section-heading">
+              <h2 id="reservas-heading">Reservar hora</h2>
+              <p>Coge tú mismo una hora libre, sin tener que llamar.</p>
+            </div>
+            <p>
+              <Link className="button button-blue" href="/area-cliente/reservas">
+                Ver horas libres
+                <Icon name="arrow" />
+              </Link>
+            </p>
+          </section>
+        )}
+
         <section className="section" aria-labelledby="ayuda-heading">
           <div className="section-heading">
             <h2 id="ayuda-heading">¿Necesitas algo más?</h2>
             <p>
-              Las reservas de clases, el seguimiento de prácticas y la asistencia a cursos se siguen gestionando
-              hablando con el centro. Aquí todavía no se pueden hacer.
+              El seguimiento de prácticas y la asistencia a cursos se siguen gestionando hablando con el centro. Aquí
+              todavía no se pueden consultar.
             </p>
           </div>
           <p>
