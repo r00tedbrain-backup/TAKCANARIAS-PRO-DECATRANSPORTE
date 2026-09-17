@@ -36,10 +36,16 @@ en **tres proyectos de compose independientes**, y así debe seguir:
 | Proyecto | Carpeta | Quién lo toca |
 |---|---|---|
 | `takcanarias` | `/opt/takcanarias/` | solo este agente |
-| `midecapro` | `/opt/midecapro/` | solo el agente de DeCA |
+| `midecapro` | `/opt/midecapro/selfhosted/` | solo el agente de DeCA |
 | `proxy` | `/opt/proxy/` | nadie sin avisar al otro |
 
-Los tres comparten la red externa `infra`. Los dominios se cargan con
+Ojo con la carpeta de DeCA: se llama `selfhosted/` por herencia del proyecto
+antiguo, pero su compose lleva `name: midecapro` y **es su despliegue vivo**. No
+es una carpeta muerta ni hay que moverla. Este agente lo dio por hecho el 16 de
+septiembre y el otro lo corrigió con `docker inspect`. Regla 5 en acción.
+
+Los tres comparten la red externa `infra`, la única que existe con contenedores.
+`selfhosted_default` quedó vacía tras la separación. Los dominios se cargan con
 `import sites/*.caddy`: cada proyecto deja su fichero en `/opt/proxy/sites/` y
 **solo toca el suyo**. `takcanarias.caddy` es nuestro; `midecapro.caddy`, suyo.
 
