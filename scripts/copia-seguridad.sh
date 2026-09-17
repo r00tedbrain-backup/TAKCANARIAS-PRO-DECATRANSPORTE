@@ -18,16 +18,37 @@
 set -euo pipefail
 
 DESTINO="${DESTINO:-/var/backups/takcanarias}"
-COMPOSE_DIR="/opt/midecapro/selfhosted"
-FICHERO_ENV="/opt/takcanarias/app/.env"
-CONTENEDOR="selfhosted-takcanarias-db-1"
 BASE="takcanarias"
 USUARIO="takcanarias"
 DIAS_A_CONSERVAR="${DIAS_A_CONSERVAR:-30}"
 
 mkdir -p "$DESTINO"
 
+# Si algo falla, que quede escrito con la palabra ERROR delante. Un fallo que
+# solo deja un ".parcial" en una carpeta que nadie mira es un fallo silencioso,
+# y esta copia ya fallo asi una vez sin que nadie se enterara.
+trap 'echo "ERROR: la copia de $(date -Is) no ha terminado. Revisar $DESTINO y este registro."' ERR
+
+# El contenedor se busca por el servicio de compose, no por su nombre. El
+# nombre lleva delante el del proyecto, y el 16 de septiembre de 2026 el
+# proyecto cambio de "selfhosted" a "takcanarias": el script siguio apuntando
+# al nombre viejo y la copia de esa madrugada fallo. Buscandolo por servicio,
+# sobrevive a que el proyecto vuelva a cambiar de nombre.
+CONTENEDOR=$(docker ps \
+  --filter "label=com.docker.compose.service=takcanarias-db" \
+  --filter "status=running" \
+  --format '{{.Names}}' | head -1)
+
+if [ -z "$CONTENEDOR" ]; then
+  echo "ERROR: no encuentro ningun contenedor en marcha del servicio takcanarias-db."
+  exit 1
+fi
+
 en_base() { docker exec -i "$CONTENEDOR" "$@"; }
+
+# Restos de intentos anteriores que no terminaron. Se quitan antes de empezar
+# para que no se confundan con copias validas ni se acumulen.
+find "$DESTINO" -name 'alumnos-*.sql.gz.parcial' -delete 2>/dev/null || true
 
 if [ "${1:-}" = "--probar-restauracion" ]; then
   # El '|| true' es necesario: con 'set -e' y 'pipefail', si todavia no hay

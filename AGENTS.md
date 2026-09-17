@@ -76,6 +76,15 @@ Detalles que costaron caro y no hay que repetir:
 - Los contenedores se llaman `takcanarias-takcanarias-1` y
   `takcanarias-takcanarias-db-1`. El nombre de **servicio**, que es lo que usa
   Caddy, sigue siendo `takcanarias`.
+- **Al renombrar los contenedores se rompió la copia de seguridad** y nadie se
+  enteró hasta que el otro agente vio un `.parcial` en la carpeta. El script
+  apuntaba al nombre viejo. Ahora busca el contenedor por su etiqueta de
+  servicio y, si falla, escribe `ERROR` en el registro. Si se toca algo que
+  cambie nombres, ejecutar `/opt/takcanarias/copia-seguridad.sh` a mano después.
+- Los volúmenes `selfhosted_*` **son los vivos**, aunque el proyecto
+  `selfhosted` ya no tenga contenedores. Un `docker volume prune` se lleva la
+  base de los alumnos y la de DeCA. No limpiar volúmenes sin mirar `docker
+  volume ls` con cada contenedor parado.
 
 Probado con reinicio completo del VPS el mismo día: SSH volvió en 16 segundos y
 los seis contenedores, las redes y los volúmenes arrancaron solos. Los cuatro
