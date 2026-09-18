@@ -23,6 +23,7 @@ import {
 } from "@/app/centro/acciones";
 import { Icon } from "./icon";
 import { AyudaPanel } from "./ayuda-panel";
+import { GuiaCentro } from "./guia-centro";
 
 const INICIAL: EstadoCentro = { ok: false };
 const ZONA = "Atlantic/Canary";
@@ -133,6 +134,14 @@ export function PanelCentro({
           {pendientes.length > 0 && ` ${pendientes.length} fichas esperando revisión.`}
         </p>
       </header>
+
+      <GuiaCentro
+        hayHorario={franjas.length > 0}
+        hayHorasAbiertas={horas.some((h) => !h.anulada)}
+        hayAlumnos={totales.alumnos > 0}
+        hayReservas={reservas.length > 0}
+        fichasPendientes={pendientes.length}
+      />
 
       <section className="section" aria-labelledby="alta">
         <div className="section-heading">
