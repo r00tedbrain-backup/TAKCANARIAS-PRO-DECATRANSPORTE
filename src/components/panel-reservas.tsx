@@ -36,6 +36,7 @@ type Reserva = {
   lugar: string | null;
   anuladaPorElCentro: boolean;
   motivoCancelacion: string | null;
+  anularSeriaFueraDePlazo: boolean;
 };
 
 const ZONA = "Atlantic/Canary";
@@ -72,18 +73,18 @@ export function PanelReservas({
 
   return (
     <>
+      {estadoAnular.mensaje && (
+        <p className="form-alert" role={estadoAnular.ok ? "status" : "alert"}>
+          {estadoAnular.mensaje}
+        </p>
+      )}
+
       {reservas.length > 0 && (
         <section className="section" aria-labelledby="mis-horas">
           <div className="section-heading">
             <h2 id="mis-horas">Tus horas reservadas</h2>
             <p>Lo que tienes cogido de aquí en adelante.</p>
           </div>
-
-          {estadoAnular.mensaje && (
-            <p className="form-alert" role={estadoAnular.ok ? "status" : "alert"}>
-              {estadoAnular.mensaje}
-            </p>
-          )}
 
           <div className="fichas-rejilla">
             {reservas.map((r) => (
@@ -103,12 +104,20 @@ export function PanelReservas({
                     {r.motivoCancelacion ? `: ${r.motivoCancelacion}` : "."} Te avisaremos para darte otra.
                   </p>
                 ) : (
-                  <form action={enviarAnular}>
-                    <input type="hidden" name="reservaId" value={r.id} />
-                    <button className="button button-white" type="submit" disabled={anulando} aria-busy={anulando}>
-                      {anulando ? "Anulando…" : "Anular esta hora"}
-                    </button>
-                  </form>
+                  <>
+                    {r.anularSeriaFueraDePlazo && (
+                      <p className="destacado">
+                        Ya estás fuera de plazo: si la anulas ahora, esta práctica se puede cobrar según las normas del
+                        centro.
+                      </p>
+                    )}
+                    <form action={enviarAnular}>
+                      <input type="hidden" name="reservaId" value={r.id} />
+                      <button className="button button-white" type="submit" disabled={anulando} aria-busy={anulando}>
+                        {anulando ? "Anulando…" : "Anular esta hora"}
+                      </button>
+                    </form>
+                  </>
                 )}
               </div>
             ))}

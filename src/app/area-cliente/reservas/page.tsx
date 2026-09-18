@@ -7,6 +7,7 @@ import { ContactBand } from "@/components/contact-band";
 import { Icon } from "@/components/icon";
 import { PanelReservas } from "@/components/panel-reservas";
 import { auth } from "@/lib/auth";
+import { anulacionEnPlazo, HORAS_MINIMAS_ANTELACION } from "@/lib/politica";
 import { db } from "@/db";
 import { alumno, reserva, sesionClase } from "@/db/schema";
 import { site } from "@/content/site";
@@ -111,6 +112,11 @@ export default async function ReservasPage() {
             Elige una hora libre y queda reservada al momento. Si luego no puedes, anúlala desde aquí y la hora vuelve
             a quedar disponible para otro alumno.
           </p>
+          <p>
+            Las anulaciones son gratis avisando con {HORAS_MINIMAS_ANTELACION} horas y en horario de oficina, de lunes
+            a viernes de 8:00 a 20:00. Fuera de ese plazo la práctica se puede cobrar: un sábado no vale para anular la
+            del lunes, porque los horarios ya están cerrados.
+          </p>
         </header>
 
         {validados.length === 0 ? (
@@ -146,6 +152,9 @@ export default async function ReservasPage() {
               lugar: r.lugar,
               anuladaPorElCentro: Boolean(r.canceladaEn),
               motivoCancelacion: r.motivoCancelacion,
+              // Calculado aqui, en el servidor, para que el aviso se vea ANTES
+              // de pulsar. La accion lo recalcula al ejecutar: esto solo avisa.
+              anularSeriaFueraDePlazo: !anulacionEnPlazo(r.inicio),
             }))}
           />
         )}

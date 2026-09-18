@@ -109,6 +109,15 @@ export const ayudaCentro: Apartado[] = [
     ],
   },
   {
+    titulo: "Cuando un alumno anula",
+    resumen: "Gratis con 24 horas de aviso y en horario de oficina. Fuera de eso, la práctica se puede cobrar.",
+    avisos: [
+      "La regla que aplica la web es la vuestra: anular sin coste exige avisar con 24 horas y hacerlo de lunes a viernes de 8:00 a 20:00. Un sábado no vale para anular la del lunes.",
+      "Si el alumno anula fuera de plazo, la web NO se lo impide: la hora se libera igualmente, pero la anulación queda marcada y en el aviso que os llega pone claramente FUERA DE PLAZO. El cobro lo decidís y lo hacéis vosotros, como hasta ahora.",
+      "Al alumno se le avisa antes de pulsar: en su pantalla ve que ya está fuera de plazo y que la práctica se puede cobrar. No puede alegar que no lo sabía.",
+    ],
+  },
+  {
     titulo: "Quién viene",
     resumen: "Las reservas de aquí en adelante, con el alumno y la cuenta desde la que se hizo.",
     avisos: [

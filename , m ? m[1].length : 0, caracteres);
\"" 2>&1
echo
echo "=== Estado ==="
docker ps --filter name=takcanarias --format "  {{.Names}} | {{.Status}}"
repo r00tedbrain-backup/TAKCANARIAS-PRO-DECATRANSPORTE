@@ -1,7 +1,0 @@
-=== Despliegue SIN exportar el .env (antes esto rompia la conexion) ===
-   Container selfhosted-takcanarias-1 Starting 
-   Container selfhosted-takcanarias-1 Started 
-
-=== La aplicacion abre su base tras ese despliegue? ===
-  clave en el contenedor -> 40 caracteres
-bash: -c: line 8: unexpected EOF while looking for matching `"'

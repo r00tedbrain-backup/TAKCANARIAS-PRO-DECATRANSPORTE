@@ -44,6 +44,8 @@ export type DatosAviso = {
   fin: Date;
   /** Quién lo hizo: el propio alumno o alguien del centro. */
   origen: "alumno" | "centro";
+  /** Anulada sin la antelación que piden las normas: valorar el cobro. */
+  fueraDePlazo?: boolean;
 };
 
 const AMBITOS: Record<string, string> = {
@@ -63,16 +65,17 @@ function cuando(inicio: Date, fin: Date): string {
 function resumen(d: DatosAviso): { asunto: string; lineas: string[] } {
   const accion = d.tipo === "nueva" ? "Nueva reserva" : "Reserva anulada";
   const porQuien = d.origen === "centro" ? " (anulada desde el centro)" : "";
-  return {
-    asunto: `${accion}: ${d.alumno} — ${cuando(d.inicio, d.fin)}`,
-    lineas: [
-      `${accion}${porQuien}`,
-      `Alumno: ${d.alumno}`,
-      `Cuándo: ${cuando(d.inicio, d.fin)}`,
-      `Tipo: ${AMBITOS[d.ambito] ?? d.ambito}`,
-      `Cuenta: ${d.titular} (${d.titularEmail})`,
-    ],
-  };
+  const lineas = [
+    `${accion}${porQuien}`,
+    `Alumno: ${d.alumno}`,
+    `Cuándo: ${cuando(d.inicio, d.fin)}`,
+    `Tipo: ${AMBITOS[d.ambito] ?? d.ambito}`,
+    `Cuenta: ${d.titular} (${d.titularEmail})`,
+  ];
+  if (d.fueraDePlazo) {
+    lineas.push("FUERA DE PLAZO: según las normas, esta práctica se puede cobrar.");
+  }
+  return { asunto: `${accion}: ${d.alumno} — ${cuando(d.inicio, d.fin)}`, lineas };
 }
 
 /* ------------------------------------------------------------------ */
@@ -150,7 +153,7 @@ async function porTelegram(d: DatosAviso): Promise<void> {
   const nombreCorto = d.alumno.trim().split(/\s+/)[0];
   const titulo = d.tipo === "nueva" ? "Nueva reserva" : "Reserva anulada";
   const lineas = [
-    `${titulo}${d.origen === "centro" ? " (desde el centro)" : ""}`,
+    `${titulo}${d.origen === "centro" ? " (desde el centro)" : ""}${d.fueraDePlazo ? " FUERA DE PLAZO" : ""}`,
     `${nombreCorto} · ${AMBITOS[d.ambito] ?? d.ambito}`,
     cuando(d.inicio, d.fin),
     "Los datos completos, en el panel.",

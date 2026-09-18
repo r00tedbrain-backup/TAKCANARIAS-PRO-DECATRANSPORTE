@@ -24,6 +24,7 @@ import { headers } from "next/headers";
 import { and, count, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { avisarAlCentro } from "@/lib/avisos";
+import { anulacionEnPlazo, HORAS_MINIMAS_ANTELACION } from "@/lib/politica";
 import { db } from "@/db";
 import { alumno, reserva, sesionClase } from "@/db/schema";
 
@@ -150,14 +151,20 @@ export async function anularReserva(_previo: EstadoReserva, formData: FormData):
     .limit(1);
 
   if (!fila) return { ok: false, mensaje: "Esa reserva no es tuya o ya no existe." };
-  if (fila.estado === "anulada") return { ok: false, mensaje: "Esa reserva ya estaba anulada." };
+  if (fila.estado !== "activa") return { ok: false, mensaje: "Esa reserva ya estaba anulada." };
   if (fila.inicio.getTime() <= Date.now()) {
     return { ok: false, mensaje: "Esa hora ya ha pasado; no se puede anular. Llama al centro." };
   }
 
+  // Norma del centro: anular sin coste exige antelación y horario laboral.
+  // Fuera de plazo la anulación SE HACE igualmente —al centro le sirve más
+  // saber que el alumno no viene, aunque cobre la práctica— pero queda marcada
+  // como tardía y el alumno avisado.
+  const enPlazo = anulacionEnPlazo(fila.inicio);
+
   await db
     .update(reserva)
-    .set({ estado: "anulada", anuladaEn: new Date() })
+    .set({ estado: enPlazo ? "anulada" : "anulada_tarde", anuladaEn: new Date() })
     .where(eq(reserva.id, reservaId));
 
   revalidatePath("/area-cliente/reservas");
@@ -174,8 +181,14 @@ export async function anularReserva(_previo: EstadoReserva, formData: FormData):
       ambito: fila.ambito,
       inicio: fila.inicio,
       fin: fila.fin,
+      fueraDePlazo: !enPlazo,
     }),
   );
 
-  return { ok: true, mensaje: "Reserva anulada. La hora vuelve a quedar libre." };
+  return enPlazo
+    ? { ok: true, mensaje: "Reserva anulada dentro de plazo. La hora vuelve a quedar libre." }
+    : {
+        ok: true,
+        mensaje: `Reserva anulada FUERA DE PLAZO. Según las normas del centro (avisar con ${HORAS_MINIMAS_ANTELACION} horas y en horario de oficina), esta práctica se puede cobrar. Si crees que hay un error, llámanos.`,
+      };
 }
