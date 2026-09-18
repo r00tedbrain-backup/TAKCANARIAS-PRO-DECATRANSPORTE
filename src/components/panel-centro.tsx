@@ -24,6 +24,7 @@ import {
 import { Icon } from "./icon";
 import { AyudaPanel } from "./ayuda-panel";
 import { GuiaCentro } from "./guia-centro";
+import { BotonCerrarSesion } from "./boton-cerrar-sesion";
 
 const INICIAL: EstadoCentro = { ok: false };
 const ZONA = "Atlantic/Canary";
@@ -133,6 +134,7 @@ export function PanelCentro({
           {responsable}. {totales.alumnos} alumnos registrados, {totales.validados} validados.
           {pendientes.length > 0 && ` ${pendientes.length} fichas esperando revisión.`}
         </p>
+        <BotonCerrarSesion />
       </header>
 
       <GuiaCentro

@@ -8,7 +8,7 @@ import { Icon } from "@/components/icon";
 import { BotonCerrarSesion } from "@/components/boton-cerrar-sesion";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { alumno, curso, matricula } from "@/db/schema";
+import { alumno, curso, matricula, user } from "@/db/schema";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -37,6 +37,14 @@ export default async function PanelPage() {
   if (!sesion) redirect("/area-cliente/acceso");
 
   const userId = sesion.user.id;
+
+  // Quien es del centro tiene su panel en otro sitio, y esta pantalla no le
+  // dice nada: le hablaría de "las fichas que tienes a tu cargo" cuando no
+  // tiene ninguna. El desvío va aquí, en el servidor, y no en el formulario de
+  // acceso, porque así cubre todas las formas de llegar: entrar, escribir la
+  // dirección a mano o volver con el botón de atrás.
+  const [quien] = await db.select({ rol: user.rol }).from(user).where(eq(user.id, userId)).limit(1);
+  if (quien?.rol === "centro") redirect("/centro");
 
   // Punto de partida: los alumnos que cuelgan de esta cuenta. Todo lo demás se
   // deriva de aquí, así que basta con que este filtro sea correcto para que
