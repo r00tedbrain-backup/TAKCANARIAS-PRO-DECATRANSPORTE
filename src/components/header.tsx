@@ -61,7 +61,7 @@ export function Header() {
             <Link href="/asesoria-transportes" onClick={close}><strong>Asesoría y tacógrafos</strong><span>Análisis, descarga y custodia de datos.</span></Link>
             <a href={site.cardDownload} target="_blank" rel="noopener noreferrer" onClick={close}><strong>Descarga de tarjeta · VDO</strong><span>Abrir Tachomat en otra pestaña.</span></a>
             <Link href="/plataforma-gps" onClick={close}><strong>Plataforma GPS</strong><span>Accede a la plataforma de Takcanarias.</span></Link>
-            <Link href="/deca" onClick={close}><strong>DeCA · En preparación</strong><span>Documentación electrónica de transporte.</span></Link>
+            <Link href="/deca" onClick={close}><strong>DeCA · miDeCApro</strong><span>Obligatorio desde el 5 de octubre. Te damos de alta.</span></Link>
           </div>
           <div><h2>Formación y alumnos</h2>
             {services.slice(1).map((service) => <Link key={service.slug} href={`/${service.slug}`} onClick={close}><strong>{service.shortTitle}</strong><span>{service.summary}</span></Link>)}

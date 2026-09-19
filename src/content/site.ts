@@ -150,7 +150,9 @@ export const services: readonly Service[] = [
 ];
 
 export const futureModules = [
-  { slug: "deca", title: "DeCA para tu empresa", description: "El Documento Electrónico de Control Administrativo, integrado en el entorno de Takcanarias.", features: ["Acceso para cada empresa", "Gestión de documentos de transporte", "Consulta y descarga de documentos"], note: "Estamos preparando la integración del servicio DeCA. El acceso y la generación de documentos no están disponibles en esta web todavía." },
+  // "deca" ya no está aquí: dejó de ser un módulo en preparación cuando la
+  // plataforma se abrió. /deca es ahora una redirección a miDeCApro, definida
+  // en next.config.ts, y lo que se cuenta de DeCA vive en la portada.
   { slug: "cursos", title: "Tu formación, también online", description: "Un aula conectada con tu centro, para continuar aprendiendo estés donde estés.", features: ["Acceso a tus cursos", "Materiales y seguimiento del aprendizaje", "Consulta de asistencia"], note: "El aula online está en preparación. Las modalidades, convocatorias y condiciones de cada curso se confirmarán antes de su apertura." },
   // "area-cliente" ya no está aquí: dejó de ser un módulo en preparación cuando
   // el acceso, el panel y las reservas pasaron a funcionar. Su página vive ahora

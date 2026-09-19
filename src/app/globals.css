@@ -647,3 +647,135 @@ a:active, button:active { opacity: .8; }
   border-radius: var(--radius);
   font-size: 13px;
 }
+
+/* ==================================================================== */
+/* DeCA en portada                                                      */
+/* ==================================================================== */
+/*
+ * Fondo oscuro a propósito: es el único bloque de la portada con fecha
+ * límite, y tiene que romper el ritmo del resto para que no se lea de pasada.
+ */
+.deca-section {
+  background: var(--color-ink);
+  color: var(--color-white);
+  padding-block: var(--space-section);
+  margin-block: 0;
+}
+
+.deca-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.deca-copy h2 { font-size: clamp(32px, 4.2vw, 52px); line-height: 1.06; margin: 0 0 20px; }
+.deca-copy p { font-size: 15px; line-height: 1.75; color: oklch(88% 0.02 265); margin: 0 0 14px; max-width: 56ch; }
+
+/* La fecha, arriba del titular y con su propio peso: es el dato que hace
+   actuar, no un adorno.
+   Va con la especificidad de .deca-copy p a propósito: aquella regla pinta los
+   párrafos en claro y, siendo más específica, dejaba esta etiqueta con 1,18:1
+   de contraste sobre su propio fondo. */
+.deca-copy .deca-plazo {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-ink);
+  background: var(--color-sky);
+  padding: 6px 12px;
+  border-radius: 3px;
+  margin: 0 0 18px;
+}
+
+.deca-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 26px; margin-top: 26px; }
+.deca-consulta { color: var(--color-sky); }
+.deca-consulta:hover { color: var(--color-white); }
+
+.deca-puntos { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+
+.deca-puntos li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 18px;
+  border-bottom: 1px solid oklch(100% 0 0 / 14%);
+}
+.deca-puntos li:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.deca-puntos svg { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 2px; color: var(--color-sky); }
+.deca-puntos strong { display: block; font-size: 15px; margin-bottom: 3px; }
+.deca-puntos span { font-size: 13px; line-height: 1.65; color: oklch(84% 0.02 265); }
+
+/* Enlace de DeCA en el hero: discreto pero con la fecha delante. */
+.hero-deca {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--color-blue);
+  font-weight: 600;
+}
+.hero-deca svg { width: 16px; height: 16px; }
+.hero-deca .hero-deca-fecha {
+  background: var(--color-wash);
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .deca-grid { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+}
+
+/* Cuenta atrás del DeCA. */
+.cuenta-atras { margin-bottom: 22px; }
+
+.cuenta-atras-titulo {
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-sky);
+  margin: 0 0 10px;
+}
+
+.cuenta-atras-bloques { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.cuenta-bloque {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 10px 12px;
+  background: oklch(100% 0 0 / 8%);
+  border: 1px solid oklch(100% 0 0 / 16%);
+  border-radius: var(--radius);
+}
+
+.cuenta-numero {
+  font-family: var(--font-display, inherit);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--color-white);
+  /* Ancho fijo por cifra: sin esto, los números bailan de lado cada segundo
+     al cambiar de un 1 estrecho a un 8 ancho. */
+  font-variant-numeric: tabular-nums;
+}
+
+.cuenta-etiqueta {
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: oklch(84% 0.02 265);
+}
+
+@media (max-width: 480px) {
+  .cuenta-bloque { min-width: 56px; padding: 8px 10px; }
+  .cuenta-numero { font-size: 24px; }
+}

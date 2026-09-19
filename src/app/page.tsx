@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { services, site } from "@/content/site";
 import { Icon } from "@/components/icon";
 import { ContactBand } from "@/components/contact-band";
+import { DecaAviso } from "@/components/deca-aviso";
 import { TachographAccess } from "@/components/tachograph-access";
 import { LocationMap } from "@/components/location-map";
 
@@ -17,6 +18,7 @@ export default function Home() {
           <h1>Tu camino.<br />Nuestra <span>experiencia.</span></h1>
           <p className="hero-description">Asesoría de transportes, autoescuela y formación.<br className="desktop-break" /> A tu lado en cada paso, en Gran Canaria.</p>
           <div className="hero-actions"><Link href="/contacto" className="button button-blue">Cuéntanos qué necesitas<Icon name="arrow" /></Link><a className="text-link" href="#servicios">Conoce nuestros servicios<Icon name="arrow" /></a></div>
+          <Link href="/deca" className="hero-deca"><span className="hero-deca-fecha">Nuevo</span>El DeCA es obligatorio desde el 5 de octubre<Icon name="arrow" /></Link>
           <div className="hero-location"><Icon name="pin" /><span>Lomo los Frailes<br /><strong>Las Palmas de Gran Canaria</strong></span></div>
         </div>
         <figure className="hero-photo">
@@ -57,10 +59,12 @@ export default function Home() {
         </div>
       </section>
 
+      <DecaAviso />
+
       <section className="digital-section"><div className="container digital-grid">
         <div><h2>El mismo equipo.<br />Nuevas formas de estar cerca.</h2><p>Estamos preparando nuevos servicios dentro de Takcanarias. Para que tengas tu documentación, tu formación y tus gestiones más a mano.</p><span className="future-status">En preparación</span></div>
         <div className="digital-links">
-          <Link href="/deca"><Icon name="document" /><div><h3>DeCA</h3><p>Documentación electrónica de transporte para tu empresa.</p></div><Icon name="arrow" /></Link>
+
           <Link href="/cursos"><Icon name="book" /><div><h3>Aula online</h3><p>Tu formación, materiales y seguimiento de cursos.</p></div><Icon name="arrow" /></Link>
           <Link href="/area-cliente"><Icon name="user" /><div><h3>Área del alumno</h3><p>Reservas, prácticas y asistencia a tus cursos.</p></div><Icon name="arrow" /></Link>
         </div>

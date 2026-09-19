@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
     { source: "/descarga-tarjetas", destination: "/descarga-tarjeta", permanent: true },
     { source: "/descarga-tarjetas-2", destination: "/descarga-tarjeta", permanent: true },
     { source: "/favicon.ico", destination: "/brand/favicon.png", permanent: false },
+
+    // La derivación de /deca a miDeCApro NO se define aquí, sino en
+    // src/app/deca/route.ts: `redirects()` devuelve 307 para las temporales y
+    // el equipo de miDeCApro pide 302 exacto para sus comprobaciones.
   ],
 
   // Detrás del proxy de Caddy: sin esto, las cabeceras de origen real no
