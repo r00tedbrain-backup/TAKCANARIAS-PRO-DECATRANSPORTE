@@ -48,7 +48,8 @@ Un `noindex` no es un control de acceso: la URL sigue siendo pública.
 
 ## Estado del despliegue
 
-- Código fuente en `main`. Demo estática en la rama `gh-pages`.
+- Código fuente en `main`, rama única. La demo de `gh-pages` se retiró el
+  19-09-2026 al migrar el dominio; ver README.
 - VPS compartido con el proyecto **DeCA en producción** (`midecapro.com`).
   No ocupar los puertos 80/443: los sirve Caddy. Ver `docs/despliegue.md`.
 - El dominio `takcanarias.es` sigue apuntando al hosting antiguo. El correo de la

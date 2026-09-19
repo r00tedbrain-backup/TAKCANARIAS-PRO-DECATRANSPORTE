@@ -100,17 +100,17 @@ cargar. Revisar consentimiento y tratamiento de datos antes de publicar.
 tarjetas. Las rutas desconocidas devuelven 404. `/blog` conserva el acceso útil
 de las entradas originales, sin inventar artículos.
 
-## Demo estática para la clienta
+## La demo estática ya no existe
 
-Se genera con `pnpm build:pages` y se publica el contenido de `out/` en la rama
-`gh-pages`, separada del código fuente de `main`. No se publican documentos
-privados ni el archivo bruto. La demo mantiene `noindex` y los módulos futuros
-siguen siendo informativos. Un `noindex` no convierte el enlace en privado.
+Hubo una copia compilada en la rama `gh-pages`, publicada en GitHub Pages, para
+enseñar la web antes de tener dominio. Se retiró el 19 de septiembre de 2026, al
+migrar `takcanarias.es` al servidor: una demo de hace semanas conviviendo con la
+web real solo sirve para que alguien mire la versión equivocada.
 
-El modo Pages aplica el prefijo del repositorio y usa las imágenes WebP sin
-optimizador de servidor. No incluye las redirecciones históricas de Next. El
-build normal (`pnpm build`) conserva el comportamiento con servidor.
-La publicación es manual: un push de código a `main` no actualiza esta demo.
+El script `pnpm build:pages` sigue existiendo por si hiciera falta otra vez, pero
+publicarlo requiere volver a crear la rama y reactivar Pages. Si se hace, que
+salga con `noindex`: un `noindex` no convierte el enlace en privado, pero al
+menos evita que compita con el dominio bueno.
 
 ## Archivo de la web anterior
 
