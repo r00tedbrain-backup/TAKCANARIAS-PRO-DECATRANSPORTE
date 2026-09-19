@@ -885,3 +885,110 @@ a:active, button:active { opacity: .8; }
 /* El aviso entero es un enlace, pero no debe parecer un enlace de texto. */
 .hero-cuenta-enlace { display: block; text-decoration: none; color: inherit; }
 .hero-cuenta-enlace:hover .hero-cuenta { border-color: var(--color-focus); }
+
+/* ---------------------------------------------------------------------------
+   Blog
+   El cuerpo del artículo se limita a 68 caracteres de ancho. No es capricho:
+   por encima de eso el ojo pierde el renglón al volver a la izquierda, y estos
+   textos son largos y densos.
+   --------------------------------------------------------------------------- */
+
+.blog-lista { display: grid; gap: 0; }
+.blog-entrada { border-top: 1px solid var(--color-line); padding-block: 34px; }
+.blog-entrada h3 { font-size: clamp(24px, 3vw, 34px); line-height: 1.15; margin: 10px 0 14px; max-width: 30ch; }
+.blog-entrada h3 a { text-decoration: none; }
+.blog-entrada h3 a:hover { color: var(--color-blue); text-decoration: underline; text-underline-offset: 6px; }
+.blog-meta { font-size: 13px; color: var(--color-muted); margin: 0; }
+.blog-entradilla { font-size: 16px; line-height: 1.7; color: var(--color-ink); max-width: 62ch; margin: 0 0 18px; }
+
+.blog-etiquetas { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0 0 18px; }
+.blog-etiquetas li {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+  background: var(--color-wash); color: var(--color-blue);
+  padding: 5px 11px; border-radius: 999px;
+}
+
+/* Artículo ---------------------------------------------------------------- */
+
+.articulo { max-width: 760px; padding-block: 16px 40px; }
+.articulo-cabecera { padding-bottom: 34px; border-bottom: 1px solid var(--color-line); margin-bottom: 8px; }
+.articulo-cabecera h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.07; margin: 14px 0 20px; }
+.articulo-entradilla { font-size: 19px; line-height: 1.6; color: var(--color-ink); max-width: 60ch; margin: 0 0 22px; }
+
+.articulo-indice { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 22px 26px; margin-block: 34px; }
+.articulo-indice-titulo { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-muted); margin: 0 0 14px; }
+.articulo-indice ol { margin: 0; padding-left: 20px; display: grid; gap: 9px; }
+.articulo-indice li { font-size: 15px; line-height: 1.5; }
+.articulo-indice a { text-decoration: underline; text-decoration-color: var(--color-line); text-underline-offset: 4px; }
+.articulo-indice a:hover { color: var(--color-blue); text-decoration-color: currentColor; }
+
+.articulo-cuerpo > p { font-size: 17px; line-height: 1.78; color: var(--color-ink); max-width: 68ch; margin: 0 0 20px; }
+.articulo-titulo { font-size: clamp(25px, 3.2vw, 34px); line-height: 1.2; margin: 52px 0 18px; scroll-margin-top: 90px; }
+.articulo-subtitulo { font-size: 19px; line-height: 1.35; margin: 32px 0 12px; }
+
+.articulo-lista { list-style: none; padding: 0; margin: 0 0 24px; display: grid; gap: 13px; max-width: 68ch; }
+.articulo-lista li { display: grid; grid-template-columns: 22px 1fr; gap: 13px; align-items: start; font-size: 16px; line-height: 1.7; }
+.articulo-lista svg { width: 19px; color: var(--color-green); margin-top: 4px; }
+
+.articulo-pasos { margin: 0 0 24px; padding-left: 24px; display: grid; gap: 14px; max-width: 68ch; }
+.articulo-pasos li { font-size: 16px; line-height: 1.7; padding-left: 4px; }
+.articulo-pasos li::marker { font-weight: 700; color: var(--color-blue); }
+
+/* Lo que no se puede pasar por alto. La franja azul a la izquierda lo separa
+   del texto corrido sin recurrir a mayúsculas ni a negrita gritada. */
+.articulo-destacado {
+  border-left: 4px solid var(--color-blue);
+  background: var(--color-wash);
+  padding: 20px 24px; margin: 0 0 26px; max-width: 68ch;
+  font-size: 16px; line-height: 1.7; font-weight: 500; color: var(--color-foreground);
+}
+
+/* Cita literal de una norma: en gris y con sangría, para que se vea a simple
+   vista que son palabras del BOE y no nuestras. */
+.articulo-cita { margin: 0 0 26px; max-width: 68ch; padding: 4px 0 4px 24px; border-left: 3px solid var(--color-line); }
+.articulo-cita blockquote { margin: 0 0 10px; font-size: 16px; line-height: 1.7; font-style: italic; color: var(--color-ink); }
+.articulo-cita figcaption { font-size: 13px; color: var(--color-muted); }
+
+.articulo-tabla-marco { overflow-x: auto; margin: 0 0 28px; border: 1px solid var(--color-line); border-radius: var(--radius); }
+.articulo-tabla { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 460px; }
+.articulo-tabla th { text-align: left; background: var(--color-paper); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; padding: 14px 18px; border-bottom: 1px solid var(--color-line); }
+.articulo-tabla td { padding: 14px 18px; line-height: 1.6; vertical-align: top; }
+.articulo-tabla tbody tr + tr td { border-top: 1px solid var(--color-line); }
+.articulo-tabla td:last-child { color: var(--color-muted); white-space: nowrap; }
+
+.articulo-llamada { background: var(--color-ink); color: var(--color-white); border-radius: var(--radius); padding: 30px 32px; margin: 40px 0 28px; }
+.articulo-llamada p { font-size: 17px; line-height: 1.65; margin: 0 0 22px; max-width: 52ch; color: oklch(93% 0.01 265); }
+
+/* Fuentes ---------------------------------------------------------------- */
+
+.articulo-fuentes { margin-top: 56px; padding-top: 34px; border-top: 1px solid var(--color-line); }
+.articulo-fuentes h2 { font-size: 22px; margin: 0 0 10px; }
+.articulo-fuentes > p { font-size: 15px; color: var(--color-muted); margin: 0 0 20px; max-width: 62ch; }
+.articulo-fuentes ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 18px; }
+.articulo-fuentes li { display: grid; gap: 4px; }
+.articulo-fuentes li a { display: inline-flex; align-items: baseline; gap: 8px; font-weight: 600; font-size: 15px; line-height: 1.5; text-decoration: underline; text-underline-offset: 4px; overflow-wrap: anywhere; }
+.articulo-fuentes li a svg { width: 14px; flex-shrink: 0; }
+.articulo-fuentes li a:hover { color: var(--color-blue); }
+.articulo-fuentes li span { font-size: 13px; color: var(--color-muted); }
+
+/* Que quede claro que informamos, no asesoramos jurídicamente. */
+.articulo-aviso { margin-top: 28px; padding: 16px 20px; background: var(--color-paper); border-radius: var(--radius); font-size: 13px; line-height: 1.65; color: var(--color-muted); }
+
+.articulo-volver { padding-block: 8px 48px; }
+
+@media (max-width: 540px) {
+  /* El botón de la llamada mide 259px y no parte línea. Con 32px de relleno a
+     cada lado se sale de un móvil de 320px, así que en pantalla estrecha se
+     recorta el relleno y el bloque respira igual. */
+  .articulo-llamada { padding: 24px 18px; }
+  .articulo-indice { padding: 20px 18px; }
+  .articulo-destacado { padding: 18px 18px; }
+  .articulo { padding-block: 8px 32px; }
+}
+
+/* Enlace al artículo desde el bloque DeCA. Va sobre fondo oscuro, así que
+   usa el azul claro del bloque y no el azul de marca, que ahí no contrasta. */
+.deca-articulo { margin: 22px 0 0; }
+.deca-articulo a { display: inline-flex; align-items: center; gap: 12px; font-size: 14px; line-height: 1.5; color: var(--color-sky); text-decoration: underline; text-underline-offset: 6px; min-height: 44px; }
+.deca-articulo a svg { width: 17px; }
+.deca-articulo a:hover { color: var(--color-white); }

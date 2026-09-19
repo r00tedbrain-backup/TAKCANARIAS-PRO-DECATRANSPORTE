@@ -14,7 +14,7 @@ const pages = [
   { slug: "plataforma-gps", title: "Plataforma GPS", description: "Acceso directo a la plataforma GPS de Takcanarias para clientes que ya disponen de acceso al servicio." },
   { slug: "politica-privacidad", title: "Política de privacidad", description: "Cómo trata Takcanarias S.L. los datos personales de quienes contactan con el centro y de su alumnado, incluido el alumnado menor de edad." },
   { slug: "aviso-legal", title: "Aviso legal", description: "Datos identificativos de Takcanarias S.L., titular de esta web: CIF, domicilio, homologación CAP 2725 y registro de autoescuela GC0308." },
-  { slug: "blog", title: "Blog", description: "Espacio de publicaciones de Takcanarias. Conservamos el acceso a la descarga de tarjeta mientras se prepara nuevo contenido." },
+  // "blog" salió de aquí: ahora tiene sus propias rutas en src/app/blog/.
 ] as const;
 
 type Props = { params: Promise<{ slug: string }> };
@@ -173,16 +173,6 @@ export default async function DetailPage({ params }: Props) {
                 </div>
                 <ExternalAccess kind={slug === "plataforma-gps" ? "gps" : "card"} />
                 <p><Link href="/contacto" className="text-link">¿Necesitas ayuda con el acceso?<Icon name="arrow" /></Link></p>
-              </section>
-            )}
-
-            {slug === "blog" && (
-              <section className="section" aria-labelledby="blog-heading">
-                <div className="section-heading">
-                  <h2 id="blog-heading">Sin nuevas publicaciones por ahora</h2>
-                  <p>Este espacio aún no tiene artículos nuevos. Si buscabas las entradas históricas sobre descarga de tarjetas, conservamos el acceso al servicio en su página de descarga.</p>
-                </div>
-                <Link href="/descarga-tarjeta" className="button button-blue">Ir a descarga de tarjeta<Icon name="arrow" /></Link>
               </section>
             )}
 

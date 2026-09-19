@@ -82,6 +82,14 @@ export function DecaAviso() {
               <Icon name="arrow" />
             </Link>
           </div>
+          {/* Quien todavía no sabe si le afecta no está para contratar nada:
+              está para leer. El artículo se lo aclara y devuelve aquí. */}
+          <p className="deca-articulo">
+            <Link href="/blog/deca-documento-control-digital-obligatorio-2026">
+              ¿No sabes si te afecta? Lo explicamos aquí, con la norma delante
+              <Icon name="arrow" />
+            </Link>
+          </p>
         </div>
 
         <ul className="deca-puntos">
