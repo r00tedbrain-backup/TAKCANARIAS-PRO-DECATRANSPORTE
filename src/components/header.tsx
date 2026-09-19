@@ -50,6 +50,9 @@ export function Header() {
           <Link href="/asesoria-transportes" aria-current={pathname === "/asesoria-transportes" ? "page" : undefined} onClick={close}>Tacógrafos</Link>
           <Link href="/autoescuela-takcanarias" aria-current={pathname === "/autoescuela-takcanarias" ? "page" : undefined} onClick={close}>Autoescuela</Link>
           <Link href="/deca" aria-current={pathname === "/deca" ? "page" : undefined} onClick={close}>DeCA</Link>
+          {/* Aquí no vale comparar la ruta entera: estando en un artículo la
+              ruta es /blog/loquesea, y el enlace del menú debe seguir marcado. */}
+          <Link href="/blog" aria-current={pathname === "/blog" || pathname.startsWith("/blog/") ? "page" : undefined} onClick={close}>Blog</Link>
           <Link href="/contacto" aria-current={pathname === "/contacto" ? "page" : undefined} onClick={close}>Contacto</Link>
         </nav>
         <Link href="/area-cliente" className="client-access" onClick={close}><Icon name="user" />Área cliente<Icon name="external" /></Link>
@@ -76,6 +79,7 @@ export function Header() {
         <Link href="/plataforma-gps" onClick={close}>Plataforma GPS</Link>
         <Link href="/deca" onClick={close}>DeCA</Link>
         <Link href="/cursos" onClick={close}>Aula online</Link>
+        <Link href="/blog" onClick={close}>Blog</Link>
         <Link href="/area-cliente" onClick={close}>Área cliente</Link>
         <Link href="/contacto" onClick={close}>Contacto<Icon name="arrow" /></Link>
       </nav>
