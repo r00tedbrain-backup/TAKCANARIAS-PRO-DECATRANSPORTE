@@ -16,7 +16,14 @@ export const empresa = {
   codigoPostal: "35018",
   municipio: "Las Palmas de Gran Canaria",
   correoTitular: "direccion@takcanarias.es",
-  registroMercantil: null as string | null,
+  /**
+   * Comprobado contra el BORME núm. 171, de 7 de septiembre de 2017, asiento
+   * 362998 (constitución): «T 2174, F 124, S 8, H GC 53144, I/A 1 (31.08.17)».
+   * El cambio de domicilio de 2024 mantiene la misma hoja, GC-53144.
+   * https://www.boe.es/borme/dias/2017/09/07/pdfs/BORME-A-2017-171-35.pdf
+   */
+  registroMercantil:
+    "Registro Mercantil de Las Palmas, tomo 2174, folio 124, sección 8, hoja GC-53144, inscripción 1.ª" as string | null,
   homologacionCap: "2725",
   registroAutoescuela: "GC0308",
   aseguradoraRC: "Hiscox",

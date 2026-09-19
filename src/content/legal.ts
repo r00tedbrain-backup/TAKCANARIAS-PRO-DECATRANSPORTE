@@ -19,8 +19,9 @@ export const avisoLegal: readonly Bloque[] = [
     parrafos: [
       `${empresa.razonSocial}, con CIF ${empresa.cif}, es la titular de este sitio web. Su domicilio está en ${empresa.domicilioFiscal}, ${empresa.codigoPostal} ${empresa.municipio}.`,
       `Puedes escribirnos a ${empresa.correoTitular} o llamar al ${site.phone}.`,
+      // El propio dato ya nombra el registro, así que aquí no se repite.
       empresa.registroMercantil
-        ? `Inscrita en el Registro Mercantil: ${empresa.registroMercantil}.`
+        ? `Inscrita en el ${empresa.registroMercantil}.`
         : "Los datos de inscripción en el Registro Mercantil se añadirán en cuanto estén disponibles.",
     ],
   },
