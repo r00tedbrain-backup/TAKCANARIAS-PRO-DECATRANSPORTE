@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { services, site } from "@/content/site";
 import { Icon } from "@/components/icon";
 import { ContactBand } from "@/components/contact-band";
-import { DecaAviso } from "@/components/deca-aviso";
+import { DecaAviso, OBLIGATORIO_DECA } from "@/components/deca-aviso";
+import { CuentaAtras } from "@/components/cuenta-atras";
 import { TachographAccess } from "@/components/tachograph-access";
 import { LocationMap } from "@/components/location-map";
 
@@ -18,7 +19,13 @@ export default function Home() {
           <h1>Tu camino.<br />Nuestra <span>experiencia.</span></h1>
           <p className="hero-description">Asesoría de transportes, autoescuela y formación.<br className="desktop-break" /> A tu lado en cada paso, en Gran Canaria.</p>
           <div className="hero-actions"><Link href="/contacto" className="button button-blue">Cuéntanos qué necesitas<Icon name="arrow" /></Link><a className="text-link" href="#servicios">Conoce nuestros servicios<Icon name="arrow" /></a></div>
-          <Link href="/deca" className="hero-deca"><span className="hero-deca-fecha">Nuevo</span>El DeCA es obligatorio desde el 5 de octubre<Icon name="arrow" /></Link>
+          <Link href="/deca" className="hero-cuenta-enlace">
+            <CuentaAtras
+              limiteISO={OBLIGATORIO_DECA}
+              respaldo="El DeCA es obligatorio el 5 de octubre"
+              variante="aviso"
+            />
+          </Link>
           <div className="hero-location"><Icon name="pin" /><span>Lomo los Frailes<br /><strong>Las Palmas de Gran Canaria</strong></span></div>
         </div>
         <figure className="hero-photo">

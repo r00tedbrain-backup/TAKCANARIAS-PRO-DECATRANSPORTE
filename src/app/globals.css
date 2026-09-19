@@ -808,3 +808,80 @@ a:active, button:active { opacity: .8; }
 @media (max-width: 560px) {
   .service-marca { display: block; margin: 6px 0 0; width: fit-content; }
 }
+
+/* ==================================================================== */
+/* Cuenta atrás del hero: la versión en rojo                            */
+/* ==================================================================== */
+/*
+ * Late en lugar de parpadear. La diferencia no es estética: un destello por
+ * encima de tres veces por segundo puede provocar una crisis a una persona con
+ * epilepsia fotosensible, y las normas de accesibilidad lo prohíben (WCAG
+ * 2.3.1). Este pulso va a algo menos de una vez por segundo y nunca llega a
+ * apagarse del todo, así que llama la atención sin riesgo.
+ *
+ * Y para quien haya pedido en su sistema que no le muevan las cosas, se queda
+ * quieto: ahí abajo está la regla que lo desactiva.
+ */
+.hero-cuenta {
+  margin-top: 22px;
+  padding: 14px 16px;
+  background: oklch(96% 0.03 25);
+  border: 1px solid oklch(78% 0.13 25);
+  border-left: 4px solid var(--color-focus);
+  border-radius: var(--radius);
+  max-width: 420px;
+}
+
+.hero-cuenta .cuenta-atras-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-focus);
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+/* El punto es lo único que late. Mover los números haría difícil leerlos. */
+.hero-cuenta-punto {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-focus);
+  flex: 0 0 auto;
+  animation: latido 1.2s ease-in-out infinite;
+}
+
+@keyframes latido {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .45; transform: scale(.82); }
+}
+
+.hero-cuenta .cuenta-bloque {
+  background: var(--color-white);
+  border-color: oklch(82% 0.1 25);
+  min-width: 58px;
+  padding: 8px 10px;
+}
+
+.hero-cuenta .cuenta-numero { color: var(--color-focus); font-size: 26px; }
+.hero-cuenta .cuenta-etiqueta { color: oklch(45% 0.08 25); }
+
+.hero-cuenta-respaldo {
+  margin-top: 22px;
+  display: inline-block;
+  padding: 10px 14px;
+  background: oklch(96% 0.03 25);
+  border-left: 4px solid var(--color-focus);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-cuenta-punto { animation: none; }
+}
+
+/* El aviso entero es un enlace, pero no debe parecer un enlace de texto. */
+.hero-cuenta-enlace { display: block; text-decoration: none; color: inherit; }
+.hero-cuenta-enlace:hover .hero-cuenta { border-color: var(--color-focus); }

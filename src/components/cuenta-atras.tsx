@@ -45,13 +45,24 @@ function desglosar(faltanSegundos: number): Restante {
 
 const dosCifras = (n: number) => String(n).padStart(2, "0");
 
-export function CuentaAtras({ limiteISO, respaldo }: { limiteISO: string; respaldo: string }) {
+export function CuentaAtras({
+  limiteISO,
+  respaldo,
+  variante = "bloque",
+}: {
+  limiteISO: string;
+  respaldo: string;
+  /** "bloque" en la sección de DeCA; "aviso" en la portada, en rojo. */
+  variante?: "bloque" | "aviso";
+}) {
   const ahora = useSyncExternalStore(suscribir, ahoraEnSegundos, enElServidorNoHayReloj);
 
   const limite = Math.floor(new Date(limiteISO).getTime() / 1000);
   const faltan = ahora === null ? null : limite - ahora;
 
-  if (faltan === null || faltan <= 0) return <p className="deca-plazo">{respaldo}</p>;
+  if (faltan === null || faltan <= 0) {
+    return <p className={variante === "aviso" ? "hero-cuenta-respaldo" : "deca-plazo"}>{respaldo}</p>;
+  }
 
   const restante = desglosar(faltan);
   const bloques: [number, string][] = [
@@ -62,8 +73,17 @@ export function CuentaAtras({ limiteISO, respaldo }: { limiteISO: string; respal
   ];
 
   return (
-    <div className="cuenta-atras">
-      <p className="cuenta-atras-titulo">Obligatorio el 5 de octubre de 2026</p>
+    <div className={variante === "aviso" ? "cuenta-atras hero-cuenta" : "cuenta-atras"}>
+      <p className="cuenta-atras-titulo">
+        {variante === "aviso" ? (
+          <>
+            <span className="hero-cuenta-punto" aria-hidden="true" />
+            El DeCA es obligatorio el 5 de octubre
+          </>
+        ) : (
+          "Obligatorio el 5 de octubre de 2026"
+        )}
+      </p>
 
       {/* Los números cambian cada segundo: oírlos repetidos sin parar sería
           insufrible, así que se ocultan y debajo va el equivalente en texto. */}

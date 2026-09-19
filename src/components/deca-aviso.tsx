@@ -20,7 +20,10 @@ import { CuentaAtras } from "./cuenta-atras";
  * directamente al dominio de destino se vería igual y no se cobraría.
  */
 
-const OBLIGATORIO_DESDE = new Date("2026-10-05T00:00:00+01:00");
+/** Se exporta para que el hero y esta sección usen la misma fecha. Con dos
+ *  copias, el día que se corrija una quedaría la otra mintiendo. */
+export const OBLIGATORIO_DECA = "2026-10-05T00:00:00+01:00";
+const OBLIGATORIO_DESDE = new Date(OBLIGATORIO_DECA);
 
 function diasHasta(fecha: Date, hoy: Date): number {
   const unDia = 86_400_000;
