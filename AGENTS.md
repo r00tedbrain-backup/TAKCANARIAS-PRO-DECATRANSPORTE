@@ -1,12 +1,41 @@
 # Takcanarias — estado y avisos
 
-## PENDIENTE BLOQUEANTE: quitar el `noindex`
+## El dominio ya está migrado (19-09-2026)
+
+`takcanarias.es` y `www.takcanarias.es` apuntan al VPS. La web es pública e
+indexable en el dominio real.
+
+Cómo se hizo y por qué así: en vez de borrar el ANAME para crear un registro A,
+se **cambió su valor** a `nueva.takcanarias.es`, y lo mismo con el CNAME de
+`www`. Borrar y crear deja un hueco en el que el dominio no resuelve, y si el
+panel falla justo ahí, la web del centro se cae. Cambiando el valor no hay
+hueco y se vuelve atrás en un clic. DonDominio resuelve el ANAME y devuelve
+192.142.37.235.
+
+- `www.takcanarias.es` sirve la web. Es el dominio canónico.
+- `takcanarias.es` responde 301 a `www`. Con los dos sirviendo lo mismo, un
+  buscador lo trataría como contenido duplicado.
+- `nueva.takcanarias.es` sigue en pie para pruebas, pero **su `robots.txt` lo
+  bloquea entero**: si se indexara, competiría con el dominio real.
+
+El `robots.ts` decide por dominio, leyendo la cabecera `host`. Al añadir un
+dominio nuevo hay que mirar ese fichero, o quedará bloqueado sin que se note.
+
+**El correo no se tocó y hay que seguir sin tocarlo.** MX, SPF, el DKIM `dddk`,
+`webmail`, `imap`, `pop`, `smtp`, `autoconfig` y `autodiscover` siguen en
+DonDominio. Comprobado tras el cambio.
+
+Queda pendiente de la titular: **tomo, folio y hoja del Registro Mercantil**. El
+aviso legal ya declara que faltan, así que la web es publicable, pero conviene
+completarlo.
+
+## Histórico: el `noindex` que había antes
 
 `src/app/layout.tsx` fuerza `robots: { index: false, follow: true }` **a propósito**.
 Toda la web responde `noindex, follow`, incluido el dominio de producción.
 
-**Google no indexará la web hasta que se retire esa línea.** No se retira hasta que
-la titular apruebe expresamente:
+Ya retirado el 19 de septiembre de 2026. Lo que se exigía antes de hacerlo, por
+si sirve de referencia:
 
 1. Textos, teléfonos, dirección, horarios y homologación CAP nº 2725.
 2. Los textos legales: `/politica-privacidad` y `/aviso-legal` son **borradores

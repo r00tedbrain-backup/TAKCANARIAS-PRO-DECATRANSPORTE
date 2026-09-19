@@ -3,8 +3,27 @@
 # Este fichero va en /opt/proxy/sites/takcanarias.caddy y SOLO lo toca el
 # agente de Takcanarias. El otro proyecto tiene el suyo en la misma carpeta.
 
-# Web y área del alumno (subdominio de pruebas hasta mover el dominio principal).
-# Next.js en Node: escucha en el 3000, no en el 80.
+# Dominio principal. Se elige "www" porque es el que la web ya venía
+# anunciando como canónico: cambiarlo ahora obligaría a revisar enlaces y
+# metadatos sin ganar nada.
+www.takcanarias.es {
+	encode gzip
+	reverse_proxy takcanarias:3000
+}
+
+# La raíz manda a www en lugar de servir lo mismo. Con dos direcciones
+# sirviendo idéntico contenido, un buscador lo trata como web duplicada y
+# reparte entre ambas la autoridad que debería ir a una sola.
+#
+# Aquí sí es permanente: la decisión de usar www no va a cambiar, y así el
+# navegador se ahorra el salto en las siguientes visitas.
+takcanarias.es {
+	redir https://www.takcanarias.es{uri} permanent
+}
+
+# Subdominio de pruebas. Sigue en pie para poder enseñar cambios antes de
+# publicarlos, pero su robots.txt lo bloquea entero: si se indexara, competiría
+# con el dominio real por el mismo contenido.
 nueva.takcanarias.es {
 	encode gzip
 	reverse_proxy takcanarias:3000

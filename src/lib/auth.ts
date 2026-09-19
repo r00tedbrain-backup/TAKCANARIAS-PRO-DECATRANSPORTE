@@ -123,8 +123,24 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24,
   },
 
-  // Sin esto, cualquier origen podría lanzar peticiones autenticadas.
-  trustedOrigins: [requerido("BETTER_AUTH_URL")],
+  /**
+   * Orígenes desde los que se aceptan peticiones autenticadas. Sin esto,
+   * cualquier web podría lanzarlas en nombre de quien tenga la sesión abierta.
+   *
+   * Durante la mudanza al dominio definitivo se admiten los dos: el de pruebas
+   * y el real. Si solo se admitiera uno, entrar dejaría de funcionar en el otro
+   * en el momento exacto del cambio, que es cuando menos conviene.
+   *
+   * `AREA_ALUMNO_ORIGENES_EXTRA` permite añadirlos sin recompilar. Cuando la
+   * mudanza esté asentada, se quita el de pruebas y vuelve a haber uno solo.
+   */
+  trustedOrigins: [
+    requerido("BETTER_AUTH_URL"),
+    ...(process.env.AREA_ALUMNO_ORIGENES_EXTRA ?? "")
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean),
+  ],
 
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
