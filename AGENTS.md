@@ -93,6 +93,48 @@ dominios respondieron sin intervención.
 Scripts de referencia en `scripts/`: `separar-proyecto.sh`, `separar-proxy.sh`,
 `rotar-clave-postgres.sh`. Ficheros del despliegue en `deploy/`.
 
+## Zona DNS de takcanarias.es ANTES de la migración
+
+Copiada literal el 19 de septiembre de 2026, con el dominio todavía apuntando
+al hosting antiguo de DonDominio. **Si hay que volver atrás, esto es lo que
+había.** Serial SOA en ese momento: 2026091503.
+
+| Nombre | Tipo | Valor |
+|---|---|---|
+| `takcanarias.es` | ANAME | `hostingsrv27.dondominio.com` (31.214.178.44) |
+| `www` | CNAME | `hostingsrv27.dondominio.com.` |
+| `*` | CNAME | `hostingsrv27.dondominio.com.` |
+| `nueva` | A | `192.142.37.235` |
+| `takcanarias.es` | MX 10 | `mx01.dondominio.com.` |
+| `takcanarias.es` | TXT | `v=spf1 include:spf.dondominio.com` |
+| `dddk._domainkey` | TXT | DKIM del correo (`v=DKIM1; k=rsa; p=MIGfMA0…QIDAQAB`) |
+| `mail`, `imap`, `pop`, `pop3`, `smtp` | CNAME | `mailsrv9.dondominio.com.` |
+| `webmail` | CNAME | `webmail-09.dondominio.net.` |
+| `autoconfig` | CNAME | `autoconfig.panel247.com.` |
+| `autodiscover` | CNAME | `autodiscover.panel247.com.` |
+| `_autodiscover._tcp` | SRV | `0 0 443 autodiscover.panel247.com` |
+| `ftp` | CNAME | `ftp-server-00.dondominio.net.` |
+| `bbdd` | CNAME | `bbddsrv8.dondominio.com.` |
+| `resend._domainkey.avisos` | TXT | DKIM de Resend |
+| `rsend.avisos` | CNAME | `rsend-euw1.forge.rmta.net.` |
+| `send.avisos` | CNAME | `send.forge.rmta.net.` |
+
+**Solo cambian dos registros al migrar**: el ANAME de la raíz y el CNAME de
+`www`, que pasan a `A → 192.142.37.235`.
+
+**Todo lo demás se queda como está, y esto es lo importante:** MX, SPF, el DKIM
+`dddk`, y los `mail`/`imap`/`pop`/`pop3`/`smtp`/`webmail`/`autoconfig`/
+`autodiscover` son el correo de la titular. Tocarlos deja al centro sin correo,
+y el daño no se ve hasta que alguien echa de menos un mensaje que nunca llegó.
+Los `avisos.*` son de Resend y tampoco se tocan.
+
+Ojo con el **comodín `*`**: manda al hosting antiguo cualquier subdominio que no
+esté escrito arriba. Mientras siga ahí, un subdominio nuevo no llega al VPS
+hasta que se le cree su propio registro; el específico gana al comodín.
+
+Para volver atrás: devolver la raíz a ANAME `hostingsrv27.dondominio.com` y
+`www` a CNAME del mismo valor. La propagación tarda lo que marque el TTL.
+
 ## La cuenta no es el alumno
 
 El centro da clases de apoyo **desde los 6 años**, y la LOPDGDD fija en **14
