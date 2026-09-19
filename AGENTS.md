@@ -164,6 +164,46 @@ hasta que se le cree su propio registro; el específico gana al comodín.
 Para volver atrás: devolver la raíz a ANAME `hostingsrv27.dondominio.com` y
 `www` a CNAME del mismo valor. La propagación tarda lo que marque el TTL.
 
+## Pendiente de respuesta de la titular (19-09-2026)
+
+Ya está pedido y esperando contestación. **No rehacer la pregunta ni suponer la
+respuesta**; si algo se implementó con un valor provisional, está dicho aquí.
+
+### Clases y horario
+
+- **El horario cargado es de lunes a viernes, 8:00–20:00**, con 2 plazas desde
+  las 16:00 (sus dos profesores de tarde) y 1 por las mañanas. Son 60 franjas.
+- **Faltan los sábados y domingos de los permisos C y D.** Dijeron "algunos", no
+  todos, así que no se metieron en el horario fijo: un horario que promete horas
+  que no existen es peor que no tenerlo. Mientras no respondan con el patrón, el
+  centro los abre a mano desde el panel cuando toque.
+- **El "80% de las veces hay dos profesores por la tarde" no se puede
+  programar.** Se dejó 2 plazas fijas; el día que solo haya un profesor, el
+  centro anula una hora desde el panel.
+
+### Anulaciones
+
+- Dijeron "24h/48h", que son cosas distintas. **Se aplicó 24 horas**, por ser lo
+  menos restrictivo, y vive en `HORAS_MINIMAS_ANTELACION` (`src/lib/politica.ts`).
+  Cambiarlo a 48 es tocar ese número.
+- La otra condición, que la anulación se haga en horario laboral, sí es
+  literal: su ejemplo fue "no vale un sábado para un lunes".
+
+### Datos y accesos
+
+- **Tomo, folio y hoja del Registro Mercantil.** Es el único dato de empresa que
+  falta. El aviso legal declara que faltan, así que la web es publicable.
+- **Derechos de las fotografías.** En `docs/assets.md` consta que no se han
+  comprobado licencias: las fotos vienen de su web anterior, y eso no prueba que
+  ella tenga los derechos. Ahora están publicadas e indexadas.
+- **Correo al que enviar los avisos** de reserva y anulación.
+  `AVISOS_EMAIL_CENTRO` está vacío, así que **no se envía nada** todavía.
+- **Correos reales del personal** que vaya a usar el panel. Solo existen las
+  cuentas de demostración (`@demo.takcanarias.es`), que hay que borrar cuando
+  terminen de enseñarlo.
+- **Telegram**: sin decidir. Las variables ni siquiera están creadas en el
+  `.env`. El aviso por correo funciona sin esto.
+
 ## La cuenta no es el alumno
 
 El centro da clases de apoyo **desde los 6 años**, y la LOPDGDD fija en **14

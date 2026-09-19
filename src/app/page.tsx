@@ -36,9 +36,24 @@ export default function Home() {
 
       <section className="section container services-section" id="servicios">
         <div className="services-intro"><h2>Para lo que <br />mueve tu vida.</h2><p>Tu trabajo. Tu permiso de conducir. Tu formación. Distintas metas, un mismo equipo para ayudarte a alcanzarlas.</p><Link href="/contacto" className="text-link">Encuentra tu próximo paso<Icon name="arrow" /></Link></div>
-        <div className="service-index">{services.map((service, index) => <Link className="service-row" href={`/${service.slug}`} key={service.slug}>
-          <span className="service-icon"><Icon name={(["truck", "book", "car", "graduate"] as const)[index]} /></span><div><h3>{service.shortTitle}</h3><p>{service.summary}</p></div><Icon name="arrow" className="row-arrow" />
-        </Link>)}</div>
+        <div className="service-index">
+          {/*
+            DeCA va el primero y fuera del recorrido de `services` porque no es
+            una página de esta web: el enlace sale a miDeCApro llevando la
+            atribución. Va arriba porque es el único con fecha límite encima.
+          */}
+          <Link className="service-row service-row-destacado" href="/deca">
+            <span className="service-icon"><Icon name="document" /></span>
+            <div>
+              <h3>DeCA <span className="service-marca">Obligatorio el 5 de octubre</span></h3>
+              <p>El documento que sustituye al albarán en papel. Te damos de alta en miDeCApro y te acompañamos con el primero.</p>
+            </div>
+            <Icon name="arrow" className="row-arrow" />
+          </Link>
+          {services.map((service, index) => <Link className="service-row" href={`/${service.slug}`} key={service.slug}>
+            <span className="service-icon"><Icon name={(["truck", "book", "car", "graduate"] as const)[index]} /></span><div><h3>{service.shortTitle}</h3><p>{service.summary}</p></div><Icon name="arrow" className="row-arrow" />
+          </Link>)}
+        </div>
       </section>
 
       <section className="container tachograph-section">
