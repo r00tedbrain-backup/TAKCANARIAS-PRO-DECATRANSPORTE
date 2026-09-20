@@ -1,4 +1,5 @@
 import "server-only";
+import { enviar, escapar } from "./telegram";
 
 /**
  * Avisos al centro cuando pasa algo en las reservas.
@@ -126,9 +127,7 @@ async function porCorreo(d: DatosAviso): Promise<void> {
  * escapar, y los nombres de personas llevan guiones y puntos a menudo. Sin esto,
  * un alumno llamado "M. Ángel Pérez-López" haría fallar el aviso.
  */
-function escaparTelegram(texto: string): string {
-  return texto.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, (c) => `\\${c}`);
-}
+const escaparTelegram = escapar;
 
 /**
  * Telegram es SOLO DE SALIDA y con los datos al mínimo.
@@ -145,10 +144,6 @@ function escaparTelegram(texto: string): string {
  * necesite la ficha completa la tiene en el panel, detrás de su contraseña.
  */
 async function porTelegram(d: DatosAviso): Promise<void> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chat = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chat) return; // Canal no configurado: no es un error.
-
   // Solo el nombre de pila: "María Suárez Pérez" viaja como "María".
   const nombreCorto = d.alumno.trim().split(/\s+/)[0];
   const titulo = d.tipo === "nueva" ? "Nueva reserva" : "Reserva anulada";
@@ -161,24 +156,9 @@ async function porTelegram(d: DatosAviso): Promise<void> {
 
   const texto = `*${escaparTelegram(lineas[0])}*\n${lineas.slice(1).map(escaparTelegram).join("\n")}`;
 
-  // Sin esperar indefinidamente: si Telegram no contesta, se abandona el aviso.
-  const corte = AbortSignal.timeout(8000);
-  const respuesta = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chat,
-      text: texto,
-      parse_mode: "MarkdownV2",
-      disable_notification: false,
-    }),
-    signal: corte,
-  });
-
-  if (!respuesta.ok) {
-    const detalle = await respuesta.text().catch(() => "");
-    throw new Error(`Telegram respondió ${respuesta.status}: ${detalle.slice(0, 200)}`);
-  }
+  // El destino no se decide aquí: lo pone `enviar` leyéndolo de la base. Si el
+  // centro no ha vinculado ninguna conversación, devuelve false y no pasa nada.
+  await enviar(texto);
 }
 
 /* ------------------------------------------------------------------ */

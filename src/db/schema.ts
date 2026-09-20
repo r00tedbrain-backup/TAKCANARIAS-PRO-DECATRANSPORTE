@@ -252,3 +252,28 @@ export const asistencia = pgTable("asistencia", {
   registradoPor: text("registrado_por"),
   registradoEn: timestamp("registrado_en").defaultNow().notNull(),
 }, (t) => [uniqueIndex("asistencia_alumno_sesion").on(t.alumnoId, t.sesionId)]);
+
+/**
+ * Conversación de Telegram a la que el bot deja los avisos.
+ *
+ * Una sola fila, id fijo a 1. Dos filas significarían dos destinos y ninguna
+ * forma de decidir cuál vale, así que la restricción lo impide en la base y no
+ * solo en el código.
+ *
+ * Está en la base y no en el .env para que el centro pueda cambiar de grupo
+ * desde el panel, sin SSH y sin reiniciar el contenedor.
+ *
+ * El token del bot NO vive aquí: sigue en el .env. El token es un secreto; el
+ * destino no lo es.
+ */
+export const telegramEnlace = pgTable("telegram_enlace", {
+  id: integer("id").primaryKey().default(1).notNull(),
+  chatId: text("chat_id"),
+  chatTitulo: text("chat_titulo"),
+  chatTipo: text("chat_tipo"),
+  vinculadoEn: timestamp("vinculado_en", { withTimezone: true }),
+  vinculadoPor: text("vinculado_por"),
+  /** Para que el panel pueda decir si el último aviso salió o falló. */
+  ultimoEnvioEn: timestamp("ultimo_envio_en", { withTimezone: true }),
+  ultimoError: text("ultimo_error"),
+});

@@ -992,3 +992,46 @@ a:active, button:active { opacity: .8; }
 .deca-articulo a { display: inline-flex; align-items: center; gap: 12px; font-size: 14px; line-height: 1.5; color: var(--color-sky); text-decoration: underline; text-underline-offset: 6px; min-height: 44px; }
 .deca-articulo a svg { width: 17px; }
 .deca-articulo a:hover { color: var(--color-white); }
+
+/* ---------------------------------------------------------------------------
+   Avisos por Telegram (panel del centro)
+   --------------------------------------------------------------------------- */
+
+/* La garantía de que el bot no escucha va en verde: es una tranquilidad,
+   no una advertencia. */
+.tg-nota { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; background: var(--color-paper); border-left: 4px solid var(--color-green); border-radius: var(--radius); padding: 16px 18px; margin: 0 0 22px; font-size: 14px; line-height: 1.65; }
+.tg-nota svg { width: 19px; color: var(--color-green); margin-top: 2px; }
+
+.tg-estado { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 18px; border: 1px solid var(--color-line); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 18px; }
+/* Franja lateral: verde cuando está funcionando, gris cuando no. Se ve de un
+   vistazo sin leer nada. */
+.tg-estado[data-vinculado="si"] { border-left: 4px solid var(--color-green); }
+.tg-estado[data-vinculado="no"] { border-left: 4px solid var(--color-line); }
+.tg-etiqueta { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); margin: 0 0 5px; font-weight: 600; }
+.tg-valor { font-size: 16px; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+
+.tg-pasos { margin: 0 0 22px; padding-left: 22px; display: grid; gap: 11px; max-width: 62ch; }
+.tg-pasos li { font-size: 15px; line-height: 1.65; }
+.tg-pasos li::marker { font-weight: 700; color: var(--color-blue); }
+.tg-pasos code { background: var(--color-wash); color: var(--color-blue); padding: 2px 7px; border-radius: 5px; font-size: 14px; font-weight: 700; }
+
+.tg-acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+
+.tg-lista { border: 1px solid var(--color-line); border-radius: var(--radius); padding: 20px 22px; margin: 18px 0; }
+.tg-lista h3 { font-size: 18px; margin: 0 0 16px; }
+.tg-candidato { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; padding: 14px 0; }
+.tg-candidato + .tg-candidato { border-top: 1px solid var(--color-line); }
+.tg-candidato > div { display: grid; gap: 3px; }
+.tg-candidato strong { font-size: 16px; overflow-wrap: anywhere; }
+.tg-candidato span { font-size: 13px; color: var(--color-muted); }
+/* Avisar de que un chat privado es mala idea, sin impedirlo. */
+.tg-candidato .tg-ojo { color: var(--color-blue); font-weight: 600; }
+
+.tg-recordatorio { margin-top: 20px; padding: 16px 18px; background: var(--color-paper); border-radius: var(--radius); font-size: 13px; line-height: 1.65; color: var(--color-muted); max-width: 66ch; }
+
+@media (max-width: 540px) {
+  .tg-estado { padding: 16px 18px; }
+  .tg-lista { padding: 16px 18px; }
+  .tg-candidato { align-items: stretch; }
+  .tg-candidato .button { width: 100%; }
+}

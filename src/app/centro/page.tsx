@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { and, asc, count, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { PanelCentro } from "@/components/panel-centro";
+import { PanelTelegram } from "@/components/panel-telegram";
+import { hayToken, identidadDelBot, leerEnlace } from "@/lib/telegram";
 import { exigirCentro } from "@/lib/centro";
 import { db } from "@/db";
 import { alumno, horarioSemanal, reserva, sesionClase, user } from "@/db/schema";
@@ -125,6 +127,16 @@ export default async function CentroPage() {
     .orderBy(desc(user.createdAt))
     .limit(200);
 
+  const enlace = await leerEnlace();
+  // El nombre del bot se pregunta a Telegram para poder decirle al centro a
+  // quién invitar al grupo. Si Telegram no contesta, la sección sigue
+  // funcionando: solo deja de mostrar el @usuario.
+  const bot = hayToken()
+    ? await identidadDelBot()
+        .then((b) => b.usuario)
+        .catch(() => null)
+    : null;
+
   return (
     <div className="container">
       <nav className="breadcrumb" aria-label="Ruta de navegación">
@@ -179,9 +191,11 @@ export default async function CentroPage() {
           correoVerificado: c.correoVerificado,
           esDelCentro: c.rol === "centro",
           alta: c.alta.toISOString(),
-          alumnos: c.alumnos,
-        }))}
-      />
-    </div>
-  );
-}
+            alumnos: c.alumnos,
+          }))}
+        />
+
+        <PanelTelegram enlace={enlace} hayToken={hayToken()} bot={bot} />
+      </div>
+    );
+  }

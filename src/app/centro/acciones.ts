@@ -19,8 +19,12 @@ import { db } from "@/db";
 import { alumno, horarioSemanal, reserva, sesionClase, user } from "@/db/schema";
 import { usuarioDelCentro } from "@/lib/centro";
 import { AMBITOS } from "@/db/schema";
+import { buscarCandidatos, desvincular, enviar, escapar, vincular, type Candidato } from "@/lib/telegram";
 
 export type EstadoCentro = { ok: boolean; mensaje?: string };
+
+/** Las acciones de Telegram arrastran además la lista de conversaciones encontradas. */
+export type EstadoTelegram = EstadoCentro & { candidatos: Candidato[] };
 
 const SIN_PERMISO: EstadoCentro = { ok: false, mensaje: "No tienes permiso para hacer esto." };
 
@@ -310,4 +314,84 @@ export async function crearCuentaAlumno(_previo: EstadoCentro, formData: FormDat
 
   revalidatePath("/centro");
   return { ok: true, mensaje: `Cuenta creada para ${esMenor ? nombreAlumno : nombre}. ${avisoCorreo}` };
+}
+
+/* ------------------------------------------------------------------ */
+/* Telegram                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Busca conversaciones que hayan escrito al bot y las deja en el estado.
+ *
+ * Esto es lo ÚNICO que lee mensajes entrantes en toda la aplicación, y solo
+ * ocurre cuando alguien del centro pulsa el botón. No hay proceso escuchando ni
+ * endpoint abierto: fuera de este momento, el bot es sordo.
+ */
+export async function buscarChatsTelegram(_previo: EstadoTelegram): Promise<EstadoTelegram> {
+  if (!(await usuarioDelCentro())) return { ...SIN_PERMISO, candidatos: [] };
+
+  try {
+    const candidatos = await buscarCandidatos();
+    if (candidatos.length === 0) {
+      return {
+        ok: false,
+        candidatos: [],
+        mensaje:
+          "Ninguna conversación ha escrito al bot en las últimas horas. Escribe /start en el grupo y vuelve a pulsar.",
+      };
+    }
+    return { ok: true, candidatos, mensaje: `${candidatos.length} conversación(es) encontrada(s).` };
+  } catch (e) {
+    const motivo = e instanceof Error ? e.message : "error desconocido";
+    return { ok: false, candidatos: [], mensaje: `Telegram respondió: ${motivo}` };
+  }
+}
+
+/** Fija la conversación a la que irán los avisos. Sustituye a la anterior si la había. */
+export async function vincularChatTelegram(
+  _previo: EstadoTelegram,
+  formData: FormData,
+): Promise<EstadoTelegram> {
+  const usuario = await usuarioDelCentro();
+  if (!usuario) return { ...SIN_PERMISO, candidatos: [] };
+
+  const chatId = texto(formData, "chatId");
+  const titulo = texto(formData, "titulo");
+  const tipo = texto(formData, "tipo");
+  if (!chatId) return { ok: false, candidatos: [], mensaje: "Falta la conversación." };
+
+  await vincular({ chatId, titulo: titulo || chatId, tipo: tipo || "?" }, usuario.email ?? usuario.id);
+  revalidatePath("/centro");
+  return { ok: true, candidatos: [], mensaje: `Avisos vinculados a «${titulo || chatId}».` };
+}
+
+/** Deja el bot sin destino. A partir de aquí no envía nada a ninguna parte. */
+export async function desvincularTelegram(_previo: EstadoTelegram): Promise<EstadoTelegram> {
+  if (!(await usuarioDelCentro())) return { ...SIN_PERMISO, candidatos: [] };
+
+  await desvincular();
+  revalidatePath("/centro");
+  return { ok: true, candidatos: [], mensaje: "Desvinculado. El bot ya no envía avisos." };
+}
+
+/**
+ * Manda un mensaje de prueba al chat vinculado.
+ *
+ * Sirve para que el centro compruebe que llega de verdad, en vez de descubrir
+ * que no funcionaba el día que entre una reserva.
+ */
+export async function probarTelegram(_previo: EstadoTelegram): Promise<EstadoTelegram> {
+  if (!(await usuarioDelCentro())) return { ...SIN_PERMISO, candidatos: [] };
+
+  try {
+    const enviado = await enviar(
+      `*${escapar("Prueba de avisos")}*\n${escapar("Si lees esto, los avisos de reservas llegarán aquí.")}`,
+    );
+    return enviado
+      ? { ok: true, candidatos: [], mensaje: "Enviado. Míralo en el grupo." }
+      : { ok: false, candidatos: [], mensaje: "No hay ninguna conversación vinculada todavía." };
+  } catch (e) {
+    const motivo = e instanceof Error ? e.message : "error desconocido";
+    return { ok: false, candidatos: [], mensaje: `No se pudo enviar: ${motivo}` };
+  }
 }
