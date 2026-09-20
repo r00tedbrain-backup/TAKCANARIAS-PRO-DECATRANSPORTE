@@ -1035,3 +1035,51 @@ a:active, button:active { opacity: .8; }
   .tg-candidato { align-items: stretch; }
   .tg-candidato .button { width: 100%; }
 }
+
+/* ---------------------------------------------------------------------------
+   Administración de cuentas (solo admin)
+   --------------------------------------------------------------------------- */
+
+.adm-nota { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; background: var(--color-paper); border-left: 4px solid var(--color-blue); border-radius: var(--radius); padding: 16px 18px; margin: 0 0 22px; font-size: 14px; line-height: 1.65; }
+.adm-nota svg { width: 19px; color: var(--color-blue); margin-top: 2px; }
+
+.adm-bloque { border: 1px solid var(--color-line); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 20px; }
+.adm-bloque h3 { font-size: 19px; margin: 0 0 16px; }
+
+.adm-desplegar { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 14px; border: 0; background: none; font-size: 17px; font-weight: 700; min-height: 44px; text-align: left; }
+.adm-desplegar svg { width: 17px; transition: transform 160ms var(--ease); flex-shrink: 0; }
+.adm-desplegar[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+.adm-form { display: grid; gap: 16px; margin-top: 18px; max-width: 520px; }
+.adm-pista { font-size: 13px; line-height: 1.6; color: var(--color-muted); margin: 0; }
+
+.adm-lista { display: grid; gap: 0; }
+.adm-cuenta { display: grid; grid-template-columns: minmax(0, 1.6fr) auto; gap: 12px 18px; align-items: start; padding: 18px 0; border-top: 1px solid var(--color-line); }
+.adm-quien { display: grid; gap: 3px; min-width: 0; }
+.adm-quien strong { font-size: 16px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.adm-quien span { font-size: 13px; color: var(--color-muted); overflow-wrap: anywhere; }
+.adm-alta { font-size: 12px; }
+
+/* Marca de "esta cuenta eres tú": evita cambiarle el rol a otro por error. */
+.adm-yo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; background: var(--color-wash); color: var(--color-blue); padding: 3px 8px; border-radius: 999px; }
+
+.adm-chapa { display: inline-block; font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+.adm-chapa-admin { background: var(--color-ink); color: var(--color-white); }
+.adm-chapa-centro { background: var(--color-wash); color: var(--color-blue); }
+.adm-chapa-alumno { background: var(--color-paper); color: var(--color-muted); }
+
+.adm-controles { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.adm-cambio { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.adm-cambio select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-line); border-radius: var(--radius); font-size: 14px; background: var(--color-white); }
+.adm-controles .button { min-height: 44px; padding-block: 10px; font-size: 13px; }
+.adm-controles .button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Por qué un botón está apagado. Un control deshabilitado sin explicación
+   parece una avería. */
+.adm-motivo { grid-column: 1 / -1; font-size: 13px; color: var(--color-muted); margin: 0; }
+
+@media (max-width: 640px) {
+  .adm-cuenta { grid-template-columns: 1fr; }
+  .adm-bloque { padding: 16px 18px; }
+  .adm-cambio, .adm-cambio select, .adm-controles form, .adm-controles .button { width: 100%; }
+}

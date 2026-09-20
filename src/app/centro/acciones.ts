@@ -17,7 +17,7 @@ import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { alumno, horarioSemanal, reserva, sesionClase, user } from "@/db/schema";
-import { usuarioDelCentro } from "@/lib/centro";
+import { usuarioAdmin, usuarioDelCentro } from "@/lib/centro";
 import { AMBITOS } from "@/db/schema";
 import { buscarCandidatos, desvincular, enviar, escapar, vincular, type Candidato } from "@/lib/telegram";
 
@@ -394,4 +394,150 @@ export async function probarTelegram(_previo: EstadoTelegram): Promise<EstadoTel
     const motivo = e instanceof Error ? e.message : "error desconocido";
     return { ok: false, candidatos: [], mensaje: `No se pudo enviar: ${motivo}` };
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Administración de cuentas: solo el administrador                    */
+/* ------------------------------------------------------------------ */
+
+const SOLO_ADMIN: EstadoCentro = {
+  ok: false,
+  mensaje: "Esto solo lo puede hacer el administrador.",
+};
+
+const ROLES_VALIDOS = ["alumno", "centro", "admin"] as const;
+
+/**
+ * Crea una cuenta de personal (centro o admin).
+ *
+ * Distinta de `crearCuentaAlumno`: aquella crea además la ficha de alumno, que
+ * aquí no tiene sentido. Un miembro del personal no es un alumno.
+ */
+export async function crearCuentaPersonal(
+  _previo: EstadoCentro,
+  formData: FormData,
+): Promise<EstadoCentro> {
+  if (!(await usuarioAdmin())) return SOLO_ADMIN;
+
+  const nombre = texto(formData, "nombre");
+  const email = texto(formData, "email").toLowerCase();
+  const rol = texto(formData, "rol");
+
+  if (!nombre) return { ok: false, mensaje: "Escribe el nombre." };
+  if (nombre.length > 120) return { ok: false, mensaje: "El nombre es demasiado largo." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, mensaje: "Ese correo no es válido." };
+  // Solo personal: para crear alumnos ya está el formulario de arriba, que
+  // además les monta la ficha.
+  if (rol !== "centro" && rol !== "admin") {
+    return { ok: false, mensaje: "Elige si es personal del centro o administrador." };
+  }
+
+  // Aleatoria, larga y que nadie ve: la cuenta no puede quedar sin contraseña,
+  // y la suya la pondrá la persona desde el enlace que recibe.
+  const provisional = randomBytes(24).toString("base64url");
+
+  let userId: string;
+  try {
+    const creado = await auth.api.signUpEmail({
+      body: { name: nombre, email, password: provisional },
+      headers: await headers(),
+    });
+    userId = creado.user.id;
+  } catch (error) {
+    if (error instanceof APIError) {
+      if (error.body?.code === "USER_ALREADY_EXISTS") {
+        return { ok: false, mensaje: "Ya existe una cuenta con ese correo." };
+      }
+      return { ok: false, mensaje: error.body?.message ?? "No se ha podido crear la cuenta." };
+    }
+    return { ok: false, mensaje: "No se ha podido crear la cuenta. Inténtalo de nuevo." };
+  }
+
+  await db.update(user).set({ rol, emailVerified: true, updatedAt: new Date() }).where(eq(user.id, userId));
+
+  let aviso = "Le hemos enviado un correo para que ponga su contraseña.";
+  try {
+    await auth.api.requestPasswordReset({
+      body: { email, redirectTo: "/area-cliente/nueva-contrasena" },
+      headers: await headers(),
+    });
+  } catch {
+    aviso = "La cuenta está creada, pero no salió el correo. Que entre en «He olvidado mi contraseña».";
+  }
+
+  revalidatePath("/centro");
+  const comoQue = rol === "admin" ? "administrador" : "personal del centro";
+  return { ok: true, mensaje: `Cuenta de ${comoQue} creada para ${nombre}. ${aviso}` };
+}
+
+/**
+ * Cambia el rol de una cuenta.
+ *
+ * Dos barandillas, y ninguna es paranoia: las dos describen formas reales de
+ * dejar el sistema sin acceso y sin arreglo desde la web.
+ */
+export async function cambiarRol(_previo: EstadoCentro, formData: FormData): Promise<EstadoCentro> {
+  const admin = await usuarioAdmin();
+  if (!admin) return SOLO_ADMIN;
+
+  const userId = texto(formData, "userId");
+  const rol = texto(formData, "rol");
+  if (!userId) return { ok: false, mensaje: "Falta la cuenta." };
+  if (!(ROLES_VALIDOS as readonly string[]).includes(rol)) {
+    return { ok: false, mensaje: "Ese rol no existe." };
+  }
+
+  const [destino] = await db
+    .select({ id: user.id, nombre: user.name, rol: user.rol })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  if (!destino) return { ok: false, mensaje: "Esa cuenta ya no existe." };
+  if (destino.rol === rol) return { ok: false, mensaje: "Esa cuenta ya tiene ese rol." };
+
+  // Única barandilla, y basta con ella: quitarse el propio permiso deja fuera
+  // al instante y sin forma de volver a entrar desde la web.
+  //
+  // No hace falta comprobar además "es el último administrador": para degradar
+  // a un admin distinto de ti tienen que existir dos, así que ese caso no puede
+  // darse. Llegué a escribir esa comprobación y era código que nunca corría.
+  if (destino.id === admin.id && rol !== "admin") {
+    return { ok: false, mensaje: "No puedes quitarte a ti mismo el rol de administrador. Que lo haga otro administrador." };
+  }
+
+  await db.update(user).set({ rol, updatedAt: new Date() }).where(eq(user.id, userId));
+  revalidatePath("/centro");
+  return { ok: true, mensaje: `${destino.nombre} pasa a ser ${rol}.` };
+}
+
+/**
+ * Envía a alguien el enlace para poner una contraseña nueva.
+ *
+ * El administrador NO ve ni elige la contraseña: solo dispara el correo. Así
+ * no existe ningún momento en que una persona conozca la clave de otra.
+ */
+export async function restablecerContrasena(
+  _previo: EstadoCentro,
+  formData: FormData,
+): Promise<EstadoCentro> {
+  if (!(await usuarioAdmin())) return SOLO_ADMIN;
+
+  const userId = texto(formData, "userId");
+  const [destino] = await db
+    .select({ email: user.email, nombre: user.name })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  if (!destino) return { ok: false, mensaje: "Esa cuenta ya no existe." };
+
+  try {
+    await auth.api.requestPasswordReset({
+      body: { email: destino.email, redirectTo: "/area-cliente/nueva-contrasena" },
+      headers: await headers(),
+    });
+  } catch {
+    return { ok: false, mensaje: "No se pudo enviar el correo. Revisa la configuración de envío." };
+  }
+
+  return { ok: true, mensaje: `Enlace enviado a ${destino.nombre}. Caduca en un rato.` };
 }

@@ -20,9 +20,14 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 
-export type UsuarioCentro = { id: string; nombre: string; email: string };
+export type Rol = "alumno" | "centro" | "admin";
 
-/** Devuelve el usuario si es del centro; null en cualquier otro caso. */
+export type UsuarioCentro = { id: string; nombre: string; email: string; rol: Rol; esAdmin: boolean };
+
+/** Roles que ven el panel. El admin es personal además de administrador. */
+const PERSONAL: readonly string[] = ["centro", "admin"];
+
+/** Devuelve el usuario si es personal del centro; null en cualquier otro caso. */
 export async function usuarioDelCentro(): Promise<UsuarioCentro | null> {
   const sesion = await auth.api.getSession({ headers: await headers() });
   if (!sesion) return null;
@@ -33,8 +38,27 @@ export async function usuarioDelCentro(): Promise<UsuarioCentro | null> {
     .where(eq(user.id, sesion.user.id))
     .limit(1);
 
-  if (!fila || fila.rol !== "centro") return null;
-  return { id: fila.id, nombre: fila.nombre, email: fila.email };
+  if (!fila || !PERSONAL.includes(fila.rol)) return null;
+  return {
+    id: fila.id,
+    nombre: fila.nombre,
+    email: fila.email,
+    rol: fila.rol as Rol,
+    esAdmin: fila.rol === "admin",
+  };
+}
+
+/**
+ * Solo el administrador.
+ *
+ * Aparte de `usuarioDelCentro` a propósito. Crear cuentas de personal, cambiar
+ * roles y restablecer contraseñas ajenas son operaciones que permiten
+ * ascenderse y perpetuarse: si las pudiera hacer cualquiera del centro, robar
+ * una sola cuenta del personal bastaría para fabricar más y no salir nunca.
+ */
+export async function usuarioAdmin(): Promise<UsuarioCentro | null> {
+  const u = await usuarioDelCentro();
+  return u?.esAdmin ? u : null;
 }
 
 /**

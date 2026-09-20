@@ -3,6 +3,7 @@ import Link from "next/link";
 import { and, asc, count, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { PanelCentro } from "@/components/panel-centro";
 import { PanelTelegram } from "@/components/panel-telegram";
+import { PanelAdmin } from "@/components/panel-admin";
 import { hayToken, identidadDelBot, leerEnlace } from "@/lib/telegram";
 import { exigirCentro } from "@/lib/centro";
 import { db } from "@/db";
@@ -196,6 +197,21 @@ export default async function CentroPage() {
         />
 
         <PanelTelegram enlace={enlace} hayToken={hayToken()} bot={bot} />
+
+        {/* Solo para el administrador. Ocultarlo no es lo que lo protege: cada
+            accion vuelve a comprobar el rol contra la base. */}
+        {responsable.esAdmin && (
+          <PanelAdmin
+            yoId={responsable.id}
+            cuentas={cuentas.map((c) => ({
+              id: c.id,
+              nombre: c.nombre,
+              email: c.email,
+              rol: c.rol,
+              alta: c.alta.toISOString(),
+            }))}
+          />
+        )}
       </div>
     );
   }
