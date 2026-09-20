@@ -192,18 +192,150 @@ respuesta**; si algo se implementó con un valor provisional, está dicho aquí.
 
 ### Datos y accesos
 
-- **Tomo, folio y hoja del Registro Mercantil.** Es el único dato de empresa que
-  falta. El aviso legal declara que faltan, así que la web es publicable.
+- ~~Tomo, folio y hoja del Registro Mercantil.~~ **RESUELTO el 20-09-2026.** Ver
+  la sección siguiente.
 - **Derechos de las fotografías.** En `docs/assets.md` consta que no se han
   comprobado licencias: las fotos vienen de su web anterior, y eso no prueba que
   ella tenga los derechos. Ahora están publicadas e indexadas.
 - **Correo al que enviar los avisos** de reserva y anulación.
-  `AVISOS_EMAIL_CENTRO` está vacío, así que **no se envía nada** todavía.
-- **Correos reales del personal** que vaya a usar el panel. Solo existen las
-  cuentas de demostración (`@demo.takcanarias.es`), que hay que borrar cuando
-  terminen de enseñarlo.
-- **Telegram**: sin decidir. Las variables ni siquiera están creadas en el
-  `.env`. El aviso por correo funciona sin esto.
+  `AVISOS_EMAIL_CENTRO` **sigue vacío**, así que si un alumno reserva o anula
+  ahora mismo, nadie del centro se entera: la reserva se guarda bien, pero el
+  correo no sale porque no hay dirección a la que mandarlo. Quedó en pasarlos el
+  21-09-2026.
+- **Correos reales del personal** que vaya a usar el panel. Ya se pueden crear
+  desde el propio panel; ver "Roles y acceso al panel".
+- ~~Telegram: sin decidir.~~ **Decidido el 20-09-2026.** Token dado y guardado;
+  falta que el centro vincule la conversación desde el panel.
+
+## Datos registrales (resuelto el 20-09-2026)
+
+`empresa.registroMercantil` en `src/content/site.ts` ya está relleno, y con eso
+desaparece sola del aviso legal la frase que reconocía que faltaban: estaba
+puesta de forma condicional justo para esto.
+
+> Registro Mercantil de Las Palmas, tomo 2174, folio 124, sección 8,
+> hoja GC-53144, inscripción 1.ª
+
+**Comprobado contra dos fuentes oficiales independientes**, no contra el resumen
+que llegó por WhatsApp:
+
+- BORME núm. 171, de 7 de septiembre de 2017, asiento **362998**, que dice
+  literal «T 2174, F 124, S 8, H GC 53144, I/A 1 (31.08.17)».
+  <https://www.boe.es/borme/dias/2017/09/07/pdfs/BORME-A-2017-171-35.pdf>
+- La nota de inscripción del propio Registro Mercantil de Las Palmas, que repite
+  tomo 2174, folio 124, hoja GC-53144, inscripción 1ª.
+
+El cambio de domicilio de 2024 mantiene la misma hoja, GC-53144. El CIF que
+figuraba ya en la web, `B76294420`, también coincide.
+
+## Roles y acceso al panel
+
+Tres roles, y el valor está cerrado por un `CHECK` en la base desde la migración
+`0006`: `alumno`, `centro`, `admin`. Antes era texto libre, y un `UPDATE` con
+«centrol» mal escrito dejaba a alguien sin permisos sin que fallara nada
+visible.
+
+| | Su área y sus reservas | Alumnos, horarios, reservas, Telegram | Crear personal, roles, contraseñas |
+|---|---|---|---|
+| `alumno` | sí | — | — |
+| `centro` | sí | sí | — |
+| `admin` | sí | sí | sí |
+
+**Por qué `admin` está separado de `centro`.** Si el personal pudiera crear
+cuentas de centro y restablecer contraseñas ajenas, robar UNA cuenta bastaría
+para fabricarse más y quedarse dentro para siempre. Separándolo, ese daño queda
+contenido.
+
+El administrador **no elige ni ve la contraseña de nadie**: solo dispara el
+correo para que la persona ponga la suya. Así no hay ningún momento en que
+alguien conozca la clave de otro.
+
+### Si te quedas sin acceso
+
+El panel impide a propósito que un administrador se quite su propio rol, porque
+le dejaría fuera al instante. Si aun así nadie puede entrar, se arregla por SSH:
+
+```sh
+ssh -p 2313 root@192.142.37.235
+docker exec -it takcanarias-takcanarias-db-1 psql -U takcanarias -d takcanarias
+```
+
+```sql
+UPDATE "user" SET rol = 'admin' WHERE email = 'tu@correo.com';
+```
+
+La base **no está expuesta a internet** y así debe seguir: no publica puerto y
+nada escucha en el 5432 hacia fuera. Para clientes gráficos, túnel SSH:
+
+```sh
+ssh -p 2313 -L 55432:takcanarias-takcanarias-db-1:5432 root@192.142.37.235
+```
+
+### Barandilla que NO existe, y por qué
+
+Se escribió una comprobación de «no puedes degradar al último administrador» y
+se quitó: **es imposible que se ejecute**. Para degradar a un admin distinto de
+ti tienen que existir dos, así que la condición «queda uno» nunca se cumple. La
+comprobación de no quitarse el rol a uno mismo lo cubre entero. No volver a
+añadirla: código que parece protegerte y nunca corre es peor que no tenerlo,
+porque te fías de él.
+
+## Cuentas vivas en producción (20-09-2026)
+
+| Correo | Rol | Qué es |
+|---|---|---|
+| `sirhofcybersec@gmail.com` | `admin` | Cuenta real de quien desarrolla |
+| `centro@demo.takcanarias.es` | `centro` | **Demostración, borrar** |
+| `alumno@demo.takcanarias.es` | `alumno` | **Demostración, borrar** |
+| `carlos.prueba@demo.takcanarias.es` | `alumno` | **Demostración, borrar** |
+
+**Las tres de demostración siguen vivas y hay que borrarlas** cuando terminen de
+enseñar el panel: sus contraseñas se han ido diciendo en voz alta y por escrito.
+Ya se pueden gestionar desde el propio panel, sin tocar la base.
+
+La contraseña de `sirhofcybersec@gmail.com` se generó al crearla y **pasó por un
+chat**, así que conviene cambiarla desde `/area-cliente/recuperar`.
+
+Al crear esa cuenta se aprendió algo que conviene no volver a descubrir: la API
+de Better Auth rechaza la petición **sin cabecera `Origin`** con
+`MISSING_OR_NULL_ORIGIN`. Es la protección CSRF, no una avería.
+
+## Avisos: Telegram y correo
+
+Son dos canales y hacen falta los dos. Telegram es cómodo para enterarse al
+momento, pero se silencia, se borra y no deja rastro. El correo es el que queda.
+
+**El bot NO escucha.** No hay webhook, no hay endpoint público y no se procesa
+ningún mensaje entrante. Esa es la forma deliberada de cumplir que no se pueda
+«abrir» desde otra conversación: si no escucha a nadie, no hay puerta que
+blindar ni filtro que pueda equivocarse. Lo único que lee mensajes entrantes es
+el botón «Buscar conversación» del panel, mientras alguien lo pulsa.
+
+Si algún día se quiere mandar órdenes al bot («enséñame las reservas de hoy»),
+hay que montar el webhook, y entonces sí hay que filtrar. Es un cambio de
+diseño, no un añadido.
+
+- El **token** vive en el `.env` (`TELEGRAM_BOT_TOKEN`). Es un secreto. Bot:
+  `@Takcanarias_bot`.
+- El **destino** vive en la base, tabla `telegram_enlace`, y se elige desde el
+  panel. No es un secreto, y el centro debe poder cambiarlo sin SSH ni reiniciar
+  el contenedor.
+- `TELEGRAM_CHAT_ID` en el `.env` **ya no se usa**: quedó de la versión
+  anterior. El destino se lee de la base.
+- La tabla tiene **una sola fila**, con un `CHECK` que lo impone en la base y no
+  solo en el código: dos filas serían dos destinos y ninguna forma de saber cuál
+  vale.
+- `enviar()` **no acepta un destino por parámetro**: lo lee de la base dentro. Si
+  se pudiera pasar desde fuera, un fallo en cualquier punto del código podría
+  mandar datos de alumnos a otra conversación. No cambiar esto.
+
+En el aviso solo viaja **el nombre de pila**, el ámbito y la hora. Ni apellidos,
+ni teléfono, ni correo: un grupo se reenvía y acaba en móviles que no
+controlamos. La ficha completa está en el panel, detrás de una contraseña.
+
+Para vincularlo: crear grupo, añadir `@Takcanarias_bot`, escribir `/start`
+—tiene que ser eso, el bot no lee los mensajes normales del grupo— y pulsar
+buscar en el panel.
 
 ## La cuenta no es el alumno
 
