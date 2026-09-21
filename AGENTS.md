@@ -1,5 +1,121 @@
 # Takcanarias — estado y avisos
 
+## INCIDENTE: correo fraudulento como `@takcanarias.es` (21-09-2026)
+
+El 21 de septiembre, clientes de la titular recibieron un correo de phishing que
+simulaba una **citación judicial del Tribunal de Justicia de Madrid**, firmado
+por un «Pablo Álvarez, Asistente de Juez», con un PDF adjunto protegido por una
+contraseña numérica que venía en el propio mensaje. El remitente que se mostraba
+era **`tramitacion@takcanarias.es`**.
+
+La contraseña del PDF está ahí para que el antivirus del servidor de correo no
+pueda abrir el adjunto y analizarlo. Es una técnica conocida, no un descuido.
+
+La titular preguntó si podía haber entrado alguien «a través de algo de la
+página». **No.** Lo que sigue son comprobaciones hechas, no opiniones.
+
+### Lo que está probado con evidencia
+
+1. **El VPS no puede enviar correo.** No hay ningún MTA instalado (0 paquetes de
+   postfix/exim/sendmail/opensmtpd), no existe el binario `sendmail`, no hay
+   nada escuchando en los puertos 25, 465 ni 587, y no existe cola de correo.
+   La aplicación solo envía por la API HTTP de Resend.
+2. **La clave de Resend no puede suplantar ese remitente.** Probado enviando:
+   con `from: tramitacion@takcanarias.es` responde **403 «The takcanarias.es
+   domain is not verified»**. Solo funciona `@avisos.takcanarias.es`, que es el
+   subdominio verificado. Aunque la clave se hubiera filtrado, no servía para
+   esto.
+3. **La web nunca ha tenido las credenciales del buzón.** No hay IMAP, ni SMTP
+   autenticado, ni contraseñas de correo en el `.env`. El único secreto de envío
+   es la clave de Resend, y ya está descartada en el punto 2.
+
+### La causa probable, y por qué
+
+**Suplantar `@takcanarias.es` no requiere acceso a nada.** El dominio no está
+protegido:
+
+- **No existe registro DMARC.** `_dmarc.takcanarias.es` no devuelve ningún TXT
+  `v=DMARC1`: lo que responde es el **comodín `*`** de la zona, que manda
+  cualquier subdominio inexistente a `hostingsrv27.dondominio.com`. Comprobado
+  consultando también `esto-no-existe-9q7x.takcanarias.es`, que responde lo
+  mismo. Sin DMARC, el servidor que recibe no tiene ninguna instrucción de
+  rechazar correo falsificado.
+- **El SPF no tiene mecanismo `all`.** Es literalmente
+  `v=spf1 include:spf.dondominio.com`, sin `-all` ni `~all` al final. Según el
+  RFC 7208, sin `all` el resultado por defecto es **neutral**, que a efectos de
+  rechazo equivale a no tener SPF.
+
+Con esas dos cosas, cualquier persona del mundo puede mandar un correo poniendo
+`tramitacion@takcanarias.es` en el remitente y no será rechazado por
+autenticación. No hace falta robar ninguna contraseña.
+
+Además, los destinatarios observados son todos direcciones de rol
+(`administracion@talleressantana.es`, `administracion@kevisti.com`,
+`administracion@takcanarias.es`). Ese patrón encaja con una lista recolectada
+automáticamente, no con una agenda de clientes robada.
+
+### Lo que NO está descartado, y hay que comprobar
+
+Honestidad por delante: lo anterior demuestra que **nuestros sistemas no lo
+enviaron** y que **no hacía falta entrar en el buzón**. No demuestra que el
+buzón no esté comprometido.
+
+Hay un indicio que apunta a que sí podría estarlo: en una captura, el iPhone de
+la titular da **«Error al enviar el correo… no se pudo conectar con
+smtp.dondominio.com»**. Eso puede ser un fallo de red sin más, pero también
+encaja con dos escenarios malos: que alguien le haya cambiado la contraseña, o
+que DonDominio le haya bloqueado la cuenta por envío masivo. **No se puede
+descartar sin mirarlo.**
+
+### Qué pedir para cerrarlo
+
+1. **Las cabeceras completas del correo original**, no una captura de pantalla.
+   En Gmail: «Mostrar original». Ahí se ve el `Received:` de verdad, y los
+   resultados de `spf=`, `dkim=` y `dmarc=`. Eso decide en un minuto si fue
+   suplantación o salió del buzón.
+2. **Carpeta de Enviados** de `tramitacion@`: si los correos están ahí, salieron
+   de la cuenta.
+3. **Registro de accesos de DonDominio** (panel y webmail): IP y hora.
+4. **Reglas de reenvío y respuesta automática** del buzón: es lo primero que
+   deja puesto quien entra, y sobrevive al cambio de contraseña.
+5. **Si la cuenta `tramitacion@` existe** y quién la usa.
+
+### Protección pendiente de aplicar
+
+**No se ha tocado nada del DNS todavía**, porque tocar SPF a ciegas deja a la
+titular sin poder enviar correo. Antes hay que saber qué servicios envían
+legítimamente como `@takcanarias.es`.
+
+Cuando se sepa, el arreglo es añadir a la zona:
+
+```
+_dmarc.takcanarias.es.  TXT  "v=DMARC1; p=none; rua=mailto:<buzon>@takcanarias.es"
+takcanarias.es.         TXT  "v=spf1 include:spf.dondominio.com ~all"
+```
+
+Se empieza con `p=none` y `~all` **a propósito**: así se recogen informes de
+quién envía sin rechazar nada todavía. Pasadas unas semanas, viendo los
+informes, se endurece a `p=quarantine` y luego `p=reject`. Poner `-all` y
+`p=reject` de golpe, sin saber quién envía, tumba el correo legítimo del centro
+y el daño es peor que el del phishing.
+
+**Ojo con el comodín `*`.** Mientras exista, cualquier consulta a un subdominio
+inexistente devuelve el hosting viejo, y eso es lo que enmascara la ausencia de
+DMARC: una comprobación superficial «ve algo» y parece que hay registro.
+
+### Sobre qué accesos tenemos y cuáles no
+
+Esto importa si alguien pregunta formalmente, así que va literal y sin adornos:
+
+- **Nunca hemos tenido la contraseña del buzón** de la titular, ni configurada
+  en ningún cliente, ni en el servidor, ni en el repositorio.
+- **Sí tenemos acceso al panel de DonDominio**, usado para la migración de DNS
+  del 19 de septiembre. Ese panel, según el nivel de permisos, puede permitir
+  gestionar cuentas de correo. Decir «no teníamos acceso a nada» sería
+  impreciso; lo correcto es que **no teníamos las credenciales del buzón y no
+  hemos entrado en él**. DonDominio registra las acciones del panel, así que
+  esto es verificable y conviene pedir ese registro también.
+
 ## El dominio ya está migrado (19-09-2026)
 
 `takcanarias.es` y `www.takcanarias.es` apuntan al VPS. La web es pública e
