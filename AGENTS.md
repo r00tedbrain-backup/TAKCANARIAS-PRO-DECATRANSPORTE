@@ -29,56 +29,103 @@ página». **No.** Lo que sigue son comprobaciones hechas, no opiniones.
    autenticado, ni contraseñas de correo en el `.env`. El único secreto de envío
    es la clave de Resend, y ya está descartada en el punto 2.
 
-### La causa probable, y por qué
+### CONFIRMADO: el buzón estaba comprometido (logs del servidor de correo)
 
-**Suplantar `@takcanarias.es` no requiere acceso a nada.** El dominio no está
-protegido:
+**Este documento decía antes que la causa probable era «suplantación del
+remitente sin necesidad de acceder al buzón». Era incorrecto.** Se escribió con
+lo único que había entonces —los registros DNS— y se corrige aquí con los logs
+del propio servidor de correo, que la titular obtuvo de DonDominio:
+`dovecot.txt` (autenticaciones IMAP) y `Logs.txt` (postfix saliente), ambos del
+21-09-2026.
+
+Los logs demuestran **acceso real al buzón con contraseña válida**, no
+suplantación desde fuera.
+
+| Medido | Valor |
+|---|---|
+| Buzones que aparecen en el log | uno solo: `tramitacion@takcanarias.es` |
+| Eventos de acceso IMAP | 1.720 |
+| Entradas **correctas** | 568 |
+| Intentos rechazados | 1.148 |
+| IPs externas distintas que **entraron con la clave correcta** | **20** |
+| Correos enviados | **198**, a **199 destinatarios distintos** |
+| Ventana del envío | 10:11 – 11:22 (21-09-2026) |
+| Ritmo en el pico | 17 mensajes/minuto (uno cada 3,5 s) |
+| IPs desde las que se envió | 3, **sin solapamiento** con las que leían |
+
+Las tres cosas que cierran el caso:
+
+1. **Veinte IPs externas distintas autenticaron correctamente en un solo día.**
+   Una persona usa dos o tres: casa, móvil, oficina. Todas son españolas y
+   residenciales, repartidas por la península (Zaragoza, Sabadell, Madrid,
+   Torrevieja, Ibiza, Almería, Alicante, Murcia, Sevilla) además de las canarias.
+2. **Los destinatarios son los clientes reales del centro.** Los dominios son
+   empresas canarias: `grancanaria.com`, `tenerife.es`, `sanchezbus.com`,
+   `avicolamorales.com`, `unionmartin.com`, `grupoggca.es`, `melsacon.com`,
+   `piserconsvarela.com`. Para tener esa lista hay que **haber leído su libreta
+   de direcciones o sus enviados**. No se saca suplantando el remitente.
+3. **Reparto de tareas.** Unas IPs leen el buzón y otras tres envían, sin que se
+   repita ninguna. Es cómo funcionan estos kits: uno recolecta, otro dispara.
+
+El envío se autenticó como `sasl_username=tramitacion@takcanarias.es`. Es decir,
+salió del servidor legítimo, con la contraseña del buzón.
+
+#### Cómo se contó, y un error que hubo que corregir
+
+El primer recuento dio **798 correos** y era falso: contaba líneas `from=` del
+log, y postfix escribe esa línea **en cada reintento de entrega**, no una por
+mensaje. El número bueno se obtiene de las líneas `cleanup` (una por mensaje
+aceptado), y da **198**, que cuadra con los 199 destinatarios distintos y las
+203 conexiones de envío. Si alguien vuelve a analizar estos logs: **no contar
+`from=`**.
+
+#### Lo que NO está probado
+
+- **Que las 20 IPs sean una red de proxies domésticos.** Encaja con el patrón
+  —todas residenciales, operadores distintos, repartidas por España— pero la
+  consulta de geolocalización solo marcó una como proxy. Es deducción, no dato.
+- **Cuál es la IP de la titular.** `83.59.218.235` (Las Palmas, Telefónica, 36
+  entradas) es la candidata más probable. No está confirmado.
+- **Si el acceso sigue abierto.** Los rechazos empiezan a las 11h, lo que encaja
+  con un cambio de clave o con un bloqueo de DonDominio, pero **sigue habiendo
+  entradas correctas hasta las 12:22**.
+
+El bloqueo explica el error del iPhone de la titular («no se pudo conectar con
+smtp.dondominio.com»): DonDominio le cortó el SMTP saliente tras el envío
+masivo, así que puede leer pero no enviar. Es consecuencia del incidente, no una
+avería aparte.
+
+### Qué hay que hacer, por orden
+
+1. **Cambiar la contraseña del buzón**, desde un equipo que no sea el habitual.
+2. **Revisar reglas de reenvío y respuesta automática.** Es lo más importante y
+   lo que todo el mundo olvida: **una regla de reenvío sobrevive al cambio de
+   contraseña**. Si la dejaron puesta, siguen leyendo todo el correo.
+3. **Revisar contraseñas de aplicación** del buzón, si las hay: también
+   sobreviven al cambio de clave.
+4. **Avisar a los 199 contactos.** Van a recibir más correos y alguno abrirá el
+   PDF.
+5. **Pedir a DonDominio el registro completo de accesos**, no este extracto.
+
+### Por qué el DMARC no habría evitado esto
+
+Sigue siendo cierto que el dominio está desprotegido, y hay que arreglarlo, pero
+**no es lo que pasó aquí**:
 
 - **No existe registro DMARC.** `_dmarc.takcanarias.es` no devuelve ningún TXT
   `v=DMARC1`: lo que responde es el **comodín `*`** de la zona, que manda
   cualquier subdominio inexistente a `hostingsrv27.dondominio.com`. Comprobado
   consultando también `esto-no-existe-9q7x.takcanarias.es`, que responde lo
-  mismo. Sin DMARC, el servidor que recibe no tiene ninguna instrucción de
-  rechazar correo falsificado.
+  mismo.
 - **El SPF no tiene mecanismo `all`.** Es literalmente
   `v=spf1 include:spf.dondominio.com`, sin `-all` ni `~all` al final. Según el
   RFC 7208, sin `all` el resultado por defecto es **neutral**, que a efectos de
   rechazo equivale a no tener SPF.
 
-Con esas dos cosas, cualquier persona del mundo puede mandar un correo poniendo
-`tramitacion@takcanarias.es` en el remitente y no será rechazado por
-autenticación. No hace falta robar ninguna contraseña.
-
-Además, los destinatarios observados son todos direcciones de rol
-(`administracion@talleressantana.es`, `administracion@kevisti.com`,
-`administracion@takcanarias.es`). Ese patrón encaja con una lista recolectada
-automáticamente, no con una agenda de clientes robada.
-
-### Lo que NO está descartado, y hay que comprobar
-
-Honestidad por delante: lo anterior demuestra que **nuestros sistemas no lo
-enviaron** y que **no hacía falta entrar en el buzón**. No demuestra que el
-buzón no esté comprometido.
-
-Hay un indicio que apunta a que sí podría estarlo: en una captura, el iPhone de
-la titular da **«Error al enviar el correo… no se pudo conectar con
-smtp.dondominio.com»**. Eso puede ser un fallo de red sin más, pero también
-encaja con dos escenarios malos: que alguien le haya cambiado la contraseña, o
-que DonDominio le haya bloqueado la cuenta por envío masivo. **No se puede
-descartar sin mirarlo.**
-
-### Qué pedir para cerrarlo
-
-1. **Las cabeceras completas del correo original**, no una captura de pantalla.
-   En Gmail: «Mostrar original». Ahí se ve el `Received:` de verdad, y los
-   resultados de `spf=`, `dkim=` y `dmarc=`. Eso decide en un minuto si fue
-   suplantación o salió del buzón.
-2. **Carpeta de Enviados** de `tramitacion@`: si los correos están ahí, salieron
-   de la cuenta.
-3. **Registro de accesos de DonDominio** (panel y webmail): IP y hora.
-4. **Reglas de reenvío y respuesta automática** del buzón: es lo primero que
-   deja puesto quien entra, y sobrevive al cambio de contraseña.
-5. **Si la cuenta `tramitacion@` existe** y quién la usa.
+Eso permite a cualquiera suplantar el remitente sin robar nada, y hay que
+taparlo. Pero **estos correos salieron del servidor legítimo con credenciales
+legítimas**, así que habrían pasado el SPF igualmente. Arreglar el DNS protege
+de otro ataque distinto, no de este.
 
 ### Protección pendiente de aplicar
 
