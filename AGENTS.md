@@ -518,6 +518,71 @@ nuevas, respetar esto.
 firmada; la recoge el centro en papel. Mientras esté a null, un alumno menor no
 está dado de alta de verdad.
 
+## Barra de urgencia del DeCA (22-09-2026)
+
+`src/components/barra-deca.tsx`, debajo del menú y en **todas las páginas
+públicas**. La pidió la titular: quería que el DeCA se viera nada más entrar.
+
+Tenía razón en el diagnóstico. El DeCA ya se mencionaba tres veces en la
+portada, pero todas quedaban por debajo del pliegue o competían con la llamada
+principal, y **ninguna decía que hubiera que pinchar**: la cuenta atrás del hero
+es un aviso sin verbo. Asusta y no convierte.
+
+El enlace va a `/deca`, no al dominio de miDeCApro. Ese rodeo **es el que lleva
+el parámetro de atribución** (`?ref=takcanarias`): enlazar directo se vería
+igual y no se cobraría la comisión. Comprobado tras el cambio.
+
+### Decisiones que parecen detalles y no lo son
+
+- **No es pegajosa.** Una barra que persigue al bajar se come un tercio del
+  móvil en cada página.
+- **No se puede cerrar.** Un aspa convierte trece días de urgencia en un
+  estorbo que se quita una vez y no se vuelve a ver.
+- **No sale en `/area-cliente` ni en `/centro`.** Ahí se entra a trabajar, y un
+  contador de ventas dentro de una herramienta interna resta seriedad.
+- **El texto es cierto antes y después del 5 de octubre.** Hubo una rama que
+  cambiaba el titular al pasar la fecha y **se quitó**: obligaba a leer el reloj
+  dentro del render, lo que desajusta la hidratación, y además la página se
+  genera una sola vez, así que se habría quedado congelada en el texto viejo
+  hasta el siguiente despliegue. Un titular que no caduca no necesita ninguna de
+  las dos cosas.
+
+### Sobre el boceto que pasó la titular
+
+Traía un botón rojo con brillo y el cursor de Windows pegado encima. **No se
+usó, y no es cuestión de gusto:** ese par concreto es la firma visual de los
+botones falsos de descarga. En la web de una asesoría a la que acababan de
+suplantar el correo, parecerse a eso levanta la guardia justo donde hace falta
+confianza.
+
+Lo que hace el trabajo es **el movimiento** de la flecha, que capta la mirada
+periférica antes que cualquier botón brillante quieto.
+
+Se intentó la mano que pedía, **dos veces**: con rectángulos y con los dedos
+plegados. Se pintaron las tres opciones juntas en pantalla a tamaño real y a 50
+píxeles ninguna se leía como una mano; parecían un mando a distancia. La flecha
+se entiende al instante y va en el trazo manuscrito del logotipo. Si se insiste
+en la mano, la vía buena es que la dibuje ella y se trace a SVG, no un icono
+genérico.
+
+### Dos fallos que solo aparecieron al comprobarlo en pantalla
+
+Ninguno se veía leyendo el código, y los dos habrían llegado a producción:
+
+1. **El titular salía en azul oscuro sobre rojo.** La regla global
+   `p { color: var(--color-muted) }` pisa el color heredado del contenedor. Hay
+   que poner el color **explícito** en cualquier `<p>` que vaya dentro de la
+   barra. Contraste medido después: **5,64:1**, sobre el 4,5:1 del nivel AA.
+2. **En móvil la barra ocupaba 680 de los 844 píxeles** de pantalla, con un
+   hueco rojo enorme. Al apilarse en columna, el `flex-basis: 260px` de
+   `.bdeca-copy` **deja de ser ancho y pasa a ser alto**. Con `flex: none` en el
+   media query baja a 251 px.
+
+Y una advertencia para quien mida contraste desde la consola: el navegador
+devuelve los colores en `lab()`. Leerlos con una expresión regular como si
+fueran RGB da números sin sentido —aquí dio 1,77:1 y luego 1,25:1 para colores
+distintos—. Hay que pintar el color en un `canvas` y leer el píxel.
+
 ## Alcance pendiente solicitado por la clienta
 
 DeCA, aula online de cursos, y área del alumno con reservas, seguimiento de
