@@ -52,16 +52,20 @@ export function CuentaAtras({
 }: {
   limiteISO: string;
   respaldo: string;
-  /** "bloque" en la sección de DeCA; "aviso" en la portada, en rojo. */
-  variante?: "bloque" | "aviso";
+  /** "bloque" en la sección de DeCA; "aviso" en la portada, en rojo;
+   *  "barra" en la franja de urgencia, que ya trae su propio titular y por eso
+   *  aquí se omite: repetir la fecha dos veces seguidas resta fuerza. */
+  variante?: "bloque" | "aviso" | "barra";
 }) {
   const ahora = useSyncExternalStore(suscribir, ahoraEnSegundos, enElServidorNoHayReloj);
 
   const limite = Math.floor(new Date(limiteISO).getTime() / 1000);
   const faltan = ahora === null ? null : limite - ahora;
 
+  const claseRespaldo = { aviso: "hero-cuenta-respaldo", barra: "bdeca-respaldo", bloque: "deca-plazo" }[variante];
+
   if (faltan === null || faltan <= 0) {
-    return <p className={variante === "aviso" ? "hero-cuenta-respaldo" : "deca-plazo"}>{respaldo}</p>;
+    return <p className={claseRespaldo}>{respaldo}</p>;
   }
 
   const restante = desglosar(faltan);
@@ -73,17 +77,19 @@ export function CuentaAtras({
   ];
 
   return (
-    <div className={variante === "aviso" ? "cuenta-atras hero-cuenta" : "cuenta-atras"}>
-      <p className="cuenta-atras-titulo">
-        {variante === "aviso" ? (
-          <>
-            <span className="hero-cuenta-punto" aria-hidden="true" />
-            El DeCA es obligatorio el 5 de octubre
-          </>
-        ) : (
-          "Obligatorio el 5 de octubre de 2026"
-        )}
-      </p>
+    <div className={variante === "bloque" ? "cuenta-atras" : `cuenta-atras ${variante === "aviso" ? "hero-cuenta" : "bdeca-cuenta"}`}>
+      {variante !== "barra" && (
+        <p className="cuenta-atras-titulo">
+          {variante === "aviso" ? (
+            <>
+              <span className="hero-cuenta-punto" aria-hidden="true" />
+              El DeCA es obligatorio el 5 de octubre
+            </>
+          ) : (
+            "Obligatorio el 5 de octubre de 2026"
+          )}
+        </p>
+      )}
 
       {/* Los números cambian cada segundo: oírlos repetidos sin parar sería
           insufrible, así que se ocultan y debajo va el equivalente en texto. */}

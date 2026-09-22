@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, Manrope } from "next/font/google";
 import { Header } from "@/components/header";
+import { BarraDeca } from "@/components/barra-deca";
 import { Footer } from "@/components/footer";
 import { site } from "@/content/site";
 import "./globals.css";
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${manrope.variable} ${barlow.variable}`}
     >
-      <body><a className="skip-link" href="#contenido">Saltar al contenido</a><Header /><main id="contenido" tabIndex={-1}>{children}</main><Footer /></body>
+      <body><a className="skip-link" href="#contenido">Saltar al contenido</a><Header /><BarraDeca /><main id="contenido" tabIndex={-1}>{children}</main><Footer /></body>
     </html>
   );
 }

@@ -1083,3 +1083,193 @@ a:active, button:active { opacity: .8; }
   .adm-bloque { padding: 16px 18px; }
   .adm-cambio, .adm-cambio select, .adm-controles form, .adm-controles .button { width: 100%; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Barra de urgencia del DeCA.
+
+   Es lo primero que se ve al entrar, en todas las páginas públicas. Nace de
+   una petición concreta de la clienta: que el aviso del DeCA sea explícito y
+   diga que hay que pinchar. La cuenta atrás del hero no lo decía.
+
+   El rojo es deliberado y es el mismo --color-focus que ya usa el aviso del
+   hero, no un rojo nuevo: la web ya tenía asociado ese tono a "esto tiene
+   fecha límite", y estrenar otro rompería esa lectura.
+
+   Lo que hace el trabajo pesado aquí no es el color, es el MOVIMIENTO de la
+   mano. Un elemento que se desplaza capta la mirada periférica mucho antes
+   que cualquier botón quieto, por brillante que sea. La regla global de
+   prefers-reduced-motion (línea ~411) ya la desactiva para quien la tenga
+   pedida, así que no hace falta repetir la guarda aquí.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.bdeca {
+  background: var(--color-focus);
+  color: var(--color-white);
+  border-block: 1px solid oklch(100% 0 0 / 18%);
+}
+
+.bdeca-inner {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 3vw, 44px);
+  padding-block: 18px;
+  flex-wrap: wrap;
+}
+
+.bdeca-copy { flex: 1 1 260px; min-width: 0; }
+
+.bdeca-etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: oklch(100% 0 0 / 88%);
+}
+
+/* El punto late para que la etiqueta no se lea como un texto fijo más. */
+.bdeca-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-white);
+  animation: latido 1.6s var(--ease) infinite;
+}
+
+/* El color va explícito y no heredado: hay una regla global `p { color:
+   var(--color-muted) }` que pisa el blanco del contenedor y dejaba el titular
+   en azul oscuro sobre rojo, con un contraste medido de 1.77:1 cuando el
+   mínimo exigible es 4.5:1. Se veía mal y además era un fallo de
+   accesibilidad. Lo mismo vale para .bdeca-respaldo. */
+.bdeca-titular {
+  margin: 0;
+  color: var(--color-white);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: clamp(20px, 2.1vw, 30px);
+  line-height: 1.06;
+  letter-spacing: -.015em;
+  /* Si parte en dos líneas, que las reparta: sin esto caía un "valer." suelto
+     en la segunda y la barra crecía casi el doble de alto. */
+  text-wrap: balance;
+}
+
+.bdeca-titular strong { font-weight: 700; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 3px; }
+
+/* Cuenta atrás: hereda la estructura de .cuenta-atras y solo cambia de piel. */
+.bdeca-cuenta { margin-bottom: 0; }
+.bdeca-cuenta .cuenta-atras-bloques { gap: 7px; }
+
+.bdeca-cuenta .cuenta-bloque {
+  background: oklch(100% 0 0 / 15%);
+  border: 1px solid oklch(100% 0 0 / 30%);
+  border-radius: var(--radius);
+  padding: 6px 10px 5px;
+  min-width: 52px;
+  text-align: center;
+}
+
+.bdeca-cuenta .cuenta-numero {
+  display: block;
+  font-family: var(--font-display), sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-white);
+}
+
+.bdeca-cuenta .cuenta-etiqueta {
+  display: block;
+  margin-top: 2px;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: oklch(100% 0 0 / 80%);
+}
+
+.bdeca-respaldo { margin: 0; color: var(--color-white); font-weight: 600; }
+
+/* Acción: la mano señala, el botón lleva. */
+.bdeca-accion {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.bdeca-senal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: senalar 1.25s var(--ease) infinite;
+}
+
+.bdeca-pincha {
+  font-size: 13px;
+  font-weight: 700;
+  font-style: italic;
+  white-space: nowrap;
+  color: oklch(100% 0 0 / 92%);
+}
+
+.bdeca-flecha { width: 62px; height: 30px; flex: none; }
+
+/* Empuja hacia el botón y vuelve. Recorrido corto a propósito: un salto
+   grande distrae de leer y marea en una barra que sale en todas las páginas. */
+@keyframes senalar {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(8px); }
+}
+
+.bdeca-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-white);
+  color: var(--color-focus);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -.005em;
+  padding: 14px 26px;
+  border-radius: var(--radius);
+  min-height: 48px;
+  box-shadow: 0 2px 0 oklch(20% 0.08 30 / 35%);
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+
+.bdeca-boton:hover { transform: translateY(-1px); box-shadow: 0 4px 0 oklch(20% 0.08 30 / 35%); }
+.bdeca-boton:active { transform: translateY(1px); box-shadow: 0 1px 0 oklch(20% 0.08 30 / 35%); }
+
+.bdeca-duda {
+  font-size: 13px;
+  color: oklch(100% 0 0 / 90%);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.bdeca-duda:hover { color: var(--color-white); }
+
+/* En móvil la barra se apila. El botón pasa a ancho completo porque ahí el
+   pulgar no acierta en un botón centrado y estrecho. */
+@media (max-width: 860px) {
+  .bdeca-inner { flex-direction: column; align-items: stretch; gap: 14px; padding-block: 16px; }
+  /* Imprescindible: en columna, el `flex-basis: 260px` de .bdeca-copy deja de
+     ser un ancho mínimo y pasa a ser ALTO. Sin esto se abría un hueco rojo de
+     260px y la barra ocupaba 680 de los 844 píxeles de un móvil, empujando la
+     web entera fuera de pantalla. */
+  .bdeca-copy { flex: none; }
+  .bdeca-accion { justify-content: space-between; }
+  .bdeca-boton { flex: 1 1 auto; }
+  .bdeca-senal { order: -1; }
+}
+
+@media (max-width: 480px) {
+  .bdeca-cuenta .cuenta-bloque { min-width: 0; flex: 1 1 0; padding: 6px 4px 5px; }
+  .bdeca-cuenta .cuenta-numero { font-size: 22px; }
+  .bdeca-pincha { font-size: 12px; }
+  .bdeca-flecha { width: 46px; height: 24px; }
+}
