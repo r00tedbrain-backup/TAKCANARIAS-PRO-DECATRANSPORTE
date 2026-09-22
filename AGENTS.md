@@ -547,6 +547,21 @@ igual y no se cobraría la comisión. Comprobado tras el cambio.
   hasta el siguiente despliegue. Un titular que no caduca no necesita ninguna de
   las dos cosas.
 
+### Los dos contadores son a propósito, y son temporales
+
+Ahora mismo hay **dos cuentas atrás con la misma cifra** en la portada: la de
+esta barra y la del hero, que ya existía. Se recomendó quitar la del hero
+—repetir el mismo número de un vistazo resta urgencia en vez de sumarla— y la
+titular prefirió dejar las dos **de momento**. Acordado el 22-09-2026:
+se retira la del hero en unos días.
+
+No es un descuido: si alguien lo ve y le parece un fallo, es esto.
+
+Para quitarla cuando toque, es un solo bloque en `src/app/page.tsx`: el
+`<Link href="/deca" className="hero-cuenta-enlace">` que envuelve al
+`<CuentaAtras variante="aviso">`. Los estilos `.hero-cuenta*` de
+`globals.css` quedarían sin uso y se pueden borrar con él.
+
 ### Sobre el boceto que pasó la titular
 
 Traía un botón rojo con brillo y el cursor de Windows pegado encima. **No se
