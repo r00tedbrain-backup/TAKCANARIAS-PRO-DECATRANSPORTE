@@ -360,13 +360,31 @@ respuesta**; si algo se implementó con un valor provisional, está dicho aquí.
 - **Derechos de las fotografías.** En `docs/assets.md` consta que no se han
   comprobado licencias: las fotos vienen de su web anterior, y eso no prueba que
   ella tenga los derechos. Ahora están publicadas e indexadas.
-- **Correo al que enviar los avisos** de reserva y anulación.
-  `AVISOS_EMAIL_CENTRO` **sigue vacío**, así que si un alumno reserva o anula
-  ahora mismo, nadie del centro se entera: la reserva se guarda bien, pero el
-  correo no sale porque no hay dirección a la que mandarlo. Quedó en pasarlos el
-  21-09-2026.
-- **Correos reales del personal** que vaya a usar el panel. Ya se pueden crear
-  desde el propio panel; ver "Roles y acceso al panel".
+- ~~Correo al que enviar los avisos.~~ **Resuelto el 21-10-2026**: Manolo pasó
+  `autoescuela@takcanarias.es`. Puesto en `AVISOS_EMAIL_CENTRO` del `.env` del
+  servidor (copia previa en `/root/takcanarias-env-20261021-1534.bak`) y
+  comprobado que la app lo lee. Se mandó un correo de prueba y Resend lo
+  aceptó; **que llegue a la bandeja lo tiene que confirmar Manolo**.
+- ~~Correos reales del personal.~~ `autoescuela@takcanarias.es` dado de alta
+  como **administrador** el 21-10-2026, a petición expresa. Ver la nota de
+  riesgo en "Cuentas vivas en producción".
+
+### Lo que se encontró al volver un mes después (21-10-2026)
+
+- **La portada llevaba 16 días diciendo «Obligatorio en 12 días» y «El DeCA
+  será obligatorio»**, pasado ya el 5 de octubre. El bloque `DecaAviso` calcula
+  su texto con la fecha del día en que se construye la página, y la última
+  construcción era del 22-09. Se arregló reconstruyendo: pasada la fecha, el
+  código elige siempre la versión «ya es obligatorio», así que **cualquier
+  construcción desde hoy queda bien para siempre**. La barra de urgencia no
+  tenía el problema porque se escribió para no depender de la fecha.
+- **El administrador no podía dar de alta a nadie.** La regla «quién es
+  personal» estaba escrita a mano en cuatro sitios y al añadir el rol `admin`
+  solo se actualizó uno. El bloqueo del registro cerrado solo dejaba pasar a
+  `centro`, así que «Crear cuenta de personal» (que exige `admin`) **no había
+  funcionado nunca**, y un admin al entrar no iba a `/centro`. Ahora hay una
+  única función, `esPersonal()` en `lib/auth.ts`. **No escribir
+  `rol === "centro"` a mano en ningún sitio.**
 - ~~Telegram: sin decidir.~~ **Decidido el 20-09-2026.** Token dado y guardado;
   falta que el centro vincule la conversación desde el panel.
 
@@ -443,11 +461,12 @@ comprobación de no quitarse el rol a uno mismo lo cubre entero. No volver a
 añadirla: código que parece protegerte y nunca corre es peor que no tenerlo,
 porque te fías de él.
 
-## Cuentas vivas en producción (20-09-2026)
+## Cuentas vivas en producción (actualizado 21-10-2026)
 
 | Correo | Rol | Qué es |
 |---|---|---|
 | `sirhofcybersec@gmail.com` | `admin` | Cuenta real de quien desarrolla |
+| `autoescuela@takcanarias.es` | `admin` | Manolo / la autoescuela. Creada 21-10-2026 |
 | `centro@demo.takcanarias.es` | `centro` | **Demostración, borrar** |
 | `alumno@demo.takcanarias.es` | `alumno` | **Demostración, borrar** |
 | `carlos.prueba@demo.takcanarias.es` | `alumno` | **Demostración, borrar** |
