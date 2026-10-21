@@ -390,10 +390,14 @@ dentro de la misma transacción) y se abrieron 4 semanas: 301 horas, hasta el
 18-11-2026. Copia previa: `/root/takcanarias-horario-antes-20261021-1734.sql.gz`.
 
 **Los demás profesores son «comodín», con horarios dispares, y NO están
-cargados.** Ojo con esto: si el centro añade desde el panel una franja a una
-hora que ya existe para meter un coche más, se guarda en el horario pero
-**no se abre**, por el mismo índice. Hoy el panel no permite subir las plazas de
-una hora concreta.
+cargados.** Desde el 21-10-2026 el centro los gestiona solo con los botones
+**+ y −** de cada casilla del horario (`cambiarCoches`), que cambian la franja
+y también esa hora en las semanas ya abiertas. Bajar coches nunca quita plaza
+a quien ya reservó: esa clase se queda como estaba y se avisa.
+
+Añadir desde el formulario una hora que ya existe **se rechaza** con un
+mensaje que manda al +. Antes se guardaba sin error y nunca llegaba a los
+alumnos, por el índice único de arriba.
 
 ### Lo que se encontró al volver un mes después (21-10-2026)
 
