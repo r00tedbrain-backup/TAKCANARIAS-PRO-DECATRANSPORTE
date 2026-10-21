@@ -1273,3 +1273,260 @@ a:active, button:active { opacity: .8; }
   .bdeca-pincha { font-size: 12px; }
   .bdeca-flecha { width: 46px; height: 24px; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Panel del centro (.pc-*)
+
+   Lo usan personas mayores y no informáticas. Tres reglas que mandan sobre
+   todo lo demás:
+
+   1. Letra base de 18px, no 16. A partir de cierta edad 16 se lee con gafas.
+   2. Nada que se pulse mide menos de 52px de alto. Un botón pequeño no es
+      "más limpio": es uno que se falla.
+   3. Una tarea por pantalla, y siempre un "Volver al inicio" grande arriba.
+
+   Misma paleta y mismas fuentes que la web: es el mismo sitio.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.pc { font-size: 18px; line-height: 1.55; padding-bottom: var(--space-section); }
+.pc p { color: var(--color-ink); }
+
+.pc-cabecera {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  padding: 18px 0 22px; margin-bottom: 26px; border-bottom: 1px solid var(--color-line);
+}
+.pc-saludo { margin: 0 0 2px; font-size: 17px; color: var(--color-muted) !important; }
+.pc-h1 { margin: 0; font-size: clamp(34px, 4vw, 48px); }
+
+.pc-explica { margin: 0 0 22px; font-size: 19px; max-width: 62ch; }
+
+/* Portada: botones grandes tipo cajero. */
+.pc-botones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.pc-boton {
+  position: relative;
+  display: flex; align-items: center; gap: 18px;
+  min-height: 120px; padding: 22px 22px;
+  background: var(--color-white);
+  border: 2px solid var(--color-line);
+  border-radius: 10px;
+  color: var(--color-ink); text-decoration: none;
+  transition: border-color .15s var(--ease), transform .15s var(--ease), box-shadow .15s var(--ease);
+}
+.pc-boton:hover { border-color: var(--color-blue); transform: translateY(-2px); box-shadow: 0 6px 18px var(--color-shadow); }
+.pc-boton:active { transform: translateY(0); }
+
+.pc-boton-icono {
+  display: grid; place-items: center; flex: none;
+  width: 58px; height: 58px; border-radius: 50%;
+  background: var(--color-wash); color: var(--color-blue);
+}
+.pc-boton-icono svg { width: 30px; height: 30px; }
+
+/* El hueco de la derecha es para el número de la esquina: sin él se montaba
+   encima del título ("Fichas por revisar" quedaba tapado). */
+.pc-boton-texto { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding-right: 30px; }
+.pc-boton-titulo { font-family: var(--font-display), sans-serif; font-size: 25px; font-weight: 600; line-height: 1.08; }
+.pc-boton-detalle { font-size: 16px; color: var(--color-muted); }
+
+.pc-boton-numero {
+  position: absolute; top: 14px; right: 14px;
+  min-width: 38px; height: 38px; padding: 0 10px;
+  display: grid; place-items: center;
+  border-radius: 999px; background: var(--color-blue); color: var(--color-white);
+  font-family: var(--font-display), sans-serif; font-size: 22px; font-weight: 700;
+}
+
+/* Lo que pide atención se ve sin leerlo. */
+.pc-boton.urgente { border-color: var(--color-focus); background: oklch(97% 0.02 30); }
+.pc-boton.urgente .pc-boton-icono { background: var(--color-focus); color: var(--color-white); }
+.pc-boton.urgente .pc-boton-numero { background: var(--color-focus); }
+.pc-boton.urgente .pc-boton-detalle { color: var(--color-focus); font-weight: 700; }
+
+/* Cada pantalla. */
+.pc-volver {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 52px; padding: 10px 20px 10px 14px; margin-bottom: 22px;
+  border: 2px solid var(--color-line); border-radius: 999px;
+  background: var(--color-white); color: var(--color-blue);
+  font-weight: 700; font-size: 17px; text-decoration: none;
+}
+.pc-volver:hover { border-color: var(--color-blue); }
+.pc-volver-flecha { width: 22px; height: 22px; transform: rotate(180deg); }
+
+.pc-titulo { margin: 0 0 10px; font-size: clamp(32px, 3.6vw, 44px); }
+.pc-titulo:focus { outline: none; }
+
+.pc-vacio {
+  display: flex; align-items: center; gap: 10px;
+  padding: 26px; border-radius: 10px; background: var(--color-wash);
+  font-size: 19px;
+}
+.pc-vacio svg { width: 26px; height: 26px; color: var(--color-green); flex: none; }
+
+/* Mensajes de resultado: grandes y con color, que se note que algo pasó. */
+.pc-aviso { margin: 0 0 20px; padding: 16px 20px; border-radius: 8px; font-size: 18px; font-weight: 600; }
+.pc-aviso.bien { background: oklch(95% 0.04 154); color: var(--color-green) !important; border-left: 5px solid var(--color-green); }
+.pc-aviso.mal { background: oklch(96% 0.03 30); color: var(--color-focus) !important; border-left: 5px solid var(--color-focus); }
+
+/* Botones dentro de las pantallas. */
+.pc-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 56px; padding: 14px 26px;
+  border: 0; border-radius: 8px;
+  background: var(--color-blue); color: var(--color-white);
+  font: inherit; font-weight: 700; font-size: 18px; cursor: pointer;
+}
+.pc-btn:hover { background: var(--color-blue-hover); }
+.pc-btn svg { width: 22px; height: 22px; }
+
+.pc-btn-secundario {
+  min-height: 48px; padding: 10px 20px;
+  border: 2px solid var(--color-line); border-radius: 8px;
+  background: var(--color-white); color: var(--color-ink);
+  font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; white-space: nowrap;
+}
+.pc-btn-secundario:hover { border-color: var(--color-focus); color: var(--color-focus); }
+
+.pc-btn:disabled, .pc-btn-secundario:disabled, .pc-quitar:disabled { opacity: .5; cursor: wait; }
+
+/* Formularios. */
+.pc-form { display: grid; gap: 20px; max-width: 620px; }
+.pc-form.en-linea { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; max-width: none; }
+.pc-fila-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+
+.pc-campo { display: grid; gap: 6px; }
+.pc-campo label { font-weight: 700; font-size: 17px; }
+.pc-campo input, .pc-campo select {
+  min-height: 54px; padding: 10px 14px;
+  border: 2px solid var(--color-line); border-radius: 8px;
+  background: var(--color-white); color: var(--color-ink); font: inherit; font-size: 18px;
+}
+.pc-campo input:focus, .pc-campo select:focus { border-color: var(--color-blue); outline: none; }
+.pc-pista { margin: 0; font-size: 15px; color: var(--color-muted) !important; }
+.pc-opcional { font-weight: 400; color: var(--color-muted); }
+
+.pc-check { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; font-size: 17px; cursor: pointer; }
+.pc-check input { width: 26px; height: 26px; flex: none; accent-color: var(--color-blue); }
+.pc-check.grande { padding: 16px 18px; border-radius: 8px; background: var(--color-wash); font-weight: 600; margin: 0; }
+
+/* Listas de clases: hoy primero, agrupadas por día. */
+.pc-dia { margin-bottom: 28px; }
+.pc-dia-titulo {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 0 0 10px; padding-bottom: 8px; border-bottom: 2px solid var(--color-line);
+  font-size: 26px;
+}
+.pc-dia-titulo span { font-family: var(--font-body), sans-serif; font-size: 16px; font-weight: 600; color: var(--color-muted); }
+.pc-dia-titulo.hoy { color: var(--color-blue); border-bottom-color: var(--color-blue); }
+
+.pc-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pc-fila {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  padding: 14px 18px; background: var(--color-white);
+  border: 1px solid var(--color-line); border-radius: 10px;
+}
+.pc-fila.apagada { opacity: .55; }
+.pc-hora {
+  display: flex; flex-direction: column; min-width: 74px;
+  font-family: var(--font-display), sans-serif; font-size: 28px; font-weight: 700; line-height: 1; color: var(--color-blue);
+}
+.pc-hora small { margin-top: 4px; font-family: var(--font-body), sans-serif; font-size: 13px; font-weight: 600; color: var(--color-muted); }
+.pc-fila-texto { display: flex; flex-direction: column; flex: 1 1 200px; min-width: 0; }
+.pc-fila-texto strong { font-size: 19px; }
+.pc-fila-texto span { font-size: 16px; color: var(--color-muted); }
+.pc-lleno { color: var(--color-focus) !important; font-weight: 700; }
+
+.pc-marca { display: inline-block; margin: 2px 0 8px; padding: 2px 10px; border-radius: 999px; background: var(--color-wash); color: var(--color-blue) !important; font-size: 14px; font-weight: 700; }
+.pc-marca.en-linea { margin: 0 0 0 10px; vertical-align: middle; }
+
+.pc-anular { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.pc-anular input {
+  min-height: 48px; width: 200px; padding: 8px 12px;
+  border: 2px solid var(--color-line); border-radius: 8px; font: inherit; font-size: 16px;
+}
+
+/* Días plegables en "Anular una clase": cuatro semanas son cientos de horas. */
+.pc-dia-plegable { margin-bottom: 10px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-paper); }
+.pc-dia-plegable > summary {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  min-height: 60px; padding: 12px 18px; cursor: pointer; list-style: none;
+}
+.pc-dia-plegable > summary::-webkit-details-marker { display: none; }
+.pc-dia-plegable > summary svg { width: 22px; height: 22px; transition: transform .2s var(--ease); flex: none; }
+.pc-dia-plegable[open] > summary svg { transform: rotate(180deg); }
+.pc-dia-nombre { font-family: var(--font-display), sans-serif; font-size: 23px; font-weight: 600; }
+.pc-dia-resumen { font-size: 16px; color: var(--color-muted); }
+.pc-dia-plegable .pc-lista { padding: 0 12px 14px; }
+
+/* Tarjetas de fichas pendientes. */
+.pc-tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.pc-tarjeta { padding: 22px; border: 2px solid var(--color-focus); border-radius: 10px; background: var(--color-white); }
+.pc-tarjeta h3 { margin: 0 0 6px; font-size: 26px; }
+.pc-tarjeta p { margin: 0 0 4px; }
+.pc-tarjeta form { margin-top: 16px; display: grid; gap: 12px; }
+
+/* Horario en cuadrícula. */
+.pc-cuadricula-marco { overflow-x: auto; margin-bottom: 22px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-white); }
+.pc-cuadricula { width: 100%; border-collapse: collapse; min-width: 560px; }
+.pc-cuadricula th, .pc-cuadricula td { padding: 6px; border-bottom: 1px solid var(--color-line); vertical-align: top; text-align: left; }
+.pc-cuadricula thead th {
+  position: sticky; top: 0; padding: 12px 8px; background: var(--color-wash);
+  font-family: var(--font-display), sans-serif; font-size: 20px; font-weight: 600;
+}
+.pc-cuadricula tbody th {
+  width: 70px; padding: 12px 10px; white-space: nowrap;
+  font-family: var(--font-display), sans-serif; font-size: 20px; font-weight: 700; color: var(--color-blue);
+}
+.pc-dia-corto { display: none; }
+
+.pc-celda {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 6px 6px 6px 10px; margin-bottom: 4px;
+  border-radius: 6px; background: var(--color-wash);
+}
+.pc-celda-texto { display: flex; flex-direction: column; font-size: 15px; font-weight: 700; line-height: 1.2; }
+.pc-celda-texto small { font-size: 13px; font-weight: 500; color: var(--color-muted); }
+
+.pc-quitar {
+  display: grid; place-items: center; flex: none;
+  width: 40px; height: 40px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--color-muted); cursor: pointer;
+}
+.pc-quitar svg { width: 20px; height: 20px; }
+.pc-quitar:hover { background: var(--color-focus); color: var(--color-white); }
+
+.pc-desplegable { margin-bottom: 26px; border: 2px dashed var(--color-line); border-radius: 10px; padding: 0 20px; }
+.pc-desplegable[open] { padding-bottom: 22px; }
+.pc-desplegable > summary {
+  display: flex; align-items: center; gap: 10px; min-height: 60px; cursor: pointer; list-style: none;
+  font-weight: 700; font-size: 19px; color: var(--color-blue);
+}
+.pc-desplegable > summary::-webkit-details-marker { display: none; }
+.pc-desplegable > summary svg { width: 22px; height: 22px; transition: transform .2s var(--ease); }
+.pc-desplegable[open] > summary svg { transform: rotate(180deg); }
+
+.pc-paso2 { padding: 24px; border-radius: 10px; background: var(--color-wash); }
+.pc-paso2 h3 { margin: 0 0 8px; font-size: 26px; }
+.pc-paso2 > p { margin: 0 0 18px; }
+
+/* Lo que viene de otros paneles (Telegram, cuentas) dentro de "Avisos y
+   accesos": sin el margen enorme de sección que traen para la página suelta. */
+.pc-pantalla > .section { padding-block: 24px; }
+
+@media (max-width: 640px) {
+  .pc-boton { min-height: 96px; padding: 18px; }
+  .pc-boton-titulo { font-size: 22px; }
+  .pc-fila { gap: 12px; }
+  .pc-anular, .pc-anular input, .pc-anular button, .pc-fila > form, .pc-fila > form button { width: 100%; }
+  .pc-dia-largo { display: none; }
+  .pc-dia-corto { display: inline; }
+}
+/* Las franjas con más de un coche se ven distintas sin leerlas. */
+.pc-celda:has(.pc-celda-texto.varios) { background: oklch(90% 0.05 266); }
+.pc-celda-texto.varios { color: var(--color-blue); }

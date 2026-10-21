@@ -31,6 +31,11 @@ export default async function CentroPage() {
   const responsable = await exigirCentro();
 
   const ahora = new Date();
+  // "Hoy" y "mañana" en Canarias, calculados aquí y no en el navegador: el
+  // panel agrupa las clases por día y el reloj no se debe leer al pintar.
+  const diaCanarias = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Atlantic/Canary" }).format(d);
+  const hoy = diaCanarias(ahora);
+  const manana = diaCanarias(new Date(ahora.getTime() + 86_400_000));
 
   const franjas = await db
     .select()
@@ -191,28 +196,33 @@ export default async function CentroPage() {
           nombre: c.nombre,
           email: c.email,
           correoVerificado: c.correoVerificado,
-            esDelCentro: esPersonal(c.rol),
-          alta: c.alta.toISOString(),
-            alumnos: c.alumnos,
-          }))}
-        />
-
-        <PanelTelegram enlace={enlace} hayToken={hayToken()} bot={bot} />
-
-        {/* Solo para el administrador. Ocultarlo no es lo que lo protege: cada
-            accion vuelve a comprobar el rol contra la base. */}
-        {responsable.esAdmin && (
-          <PanelAdmin
-            yoId={responsable.id}
-            cuentas={cuentas.map((c) => ({
-              id: c.id,
-              nombre: c.nombre,
-              email: c.email,
-              rol: c.rol,
-              alta: c.alta.toISOString(),
+              esDelCentro: esPersonal(c.rol),
+            alta: c.alta.toISOString(),
+              alumnos: c.alumnos,
             }))}
+          hoy={hoy}
+          manana={manana}
+          ajustes={
+            <>
+              <PanelTelegram enlace={enlace} hayToken={hayToken()} bot={bot} />
+
+              {/* Solo para el administrador. Ocultarlo no es lo que lo protege:
+                  cada accion vuelve a comprobar el rol contra la base. */}
+              {responsable.esAdmin && (
+                <PanelAdmin
+                  yoId={responsable.id}
+                  cuentas={cuentas.map((c) => ({
+                    id: c.id,
+                    nombre: c.nombre,
+                    email: c.email,
+                    rol: c.rol,
+                    alta: c.alta.toISOString(),
+                  }))}
+                />
+              )}
+            </>
+          }
           />
-        )}
-      </div>
+        </div>
     );
   }
