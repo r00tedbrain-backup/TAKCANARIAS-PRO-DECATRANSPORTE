@@ -369,26 +369,31 @@ respuesta**; si algo se implementó con un valor provisional, está dicho aquí.
   como **administrador** el 21-10-2026, a petición expresa. Ver la nota de
   riesgo en "Cuentas vivas en producción".
 
-### Prácticas de 45 minutos (21-10-2026) — PENDIENTE de datos
+### Prácticas de 45 minutos (cargado el 21-10-2026)
 
-Manolo: «Las prácticas son de 45 minutos», **seguidas, sin hueco**. Un
-profesor descansa de 11:00 a 11:15, una profesora de 15:00 a 15:30, y «a los
-demás les doy una práctica entera de descanso».
+Datos de Manolo, prácticas de 45 min seguidas, de lunes a viernes:
 
-El horario de producción sigue siendo de franjas de 1 hora y **no se ha
-cambiado**: con descansos distintos, cada profesor acaba con sus propias horas
-de inicio, y sin saber de cada uno qué días trabaja, cuándo empieza, cuándo
-acaba y cuándo descansa, montarlo sería inventar horas en las que no hay
-profesor. Pedido a Manolo por WhatsApp. Se representa como una cadena de
-franjas de 45 min con 1 plaza **por profesor**; el modelo ya lo admite.
+| Profesor | Horario | Descanso | Prácticas/día |
+|---|---|---|---|
+| Javier | 08:00–15:00 | 11:00–11:15 | 9 |
+| Idaira | 12:45–20:00 | 15:00–15:30 | 9 |
 
-Al cargarlo: **las 240 horas ya abiertas son de 1 hora** y «Abrir horas» no
-las toca. Hay que quitar las futuras sin reservas y volver a abrir. El
-21-10-2026 había 0 reservas, así que no perjudicaba a nadie.
+Los dos cuadran al minuto, sin restos. **De 12:45 a 15:00 coinciden**, así que
+esas tres franjas van con **2 plazas** en una sola fila: el índice único
+`sesion_unica_por_franja (ambito, inicio, fin)` descarta en silencio la segunda
+franja a la misma hora (`ON CONFLICT DO NOTHING`), y esa hora quedaría con un
+solo coche sin que fallase nada. Resultado: 15 franjas por día, 75 a la
+semana, 18 prácticas diarias.
 
-Mientras, el centro estaba editando el horario a mano (apareció un
-`16:15–17:00` y una franja menos). Si se carga el horario completo, esas
-ediciones se pierden: avisar antes.
+Se borraron las 242 horas futuras de 1 hora (había **0 reservas**, comprobado
+dentro de la misma transacción) y se abrieron 4 semanas: 301 horas, hasta el
+18-11-2026. Copia previa: `/root/takcanarias-horario-antes-20261021-1734.sql.gz`.
+
+**Los demás profesores son «comodín», con horarios dispares, y NO están
+cargados.** Ojo con esto: si el centro añade desde el panel una franja a una
+hora que ya existe para meter un coche más, se guarda en el horario pero
+**no se abre**, por el mismo índice. Hoy el panel no permite subir las plazas de
+una hora concreta.
 
 ### Lo que se encontró al volver un mes después (21-10-2026)
 
