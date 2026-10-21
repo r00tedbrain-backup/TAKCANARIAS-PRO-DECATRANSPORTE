@@ -16,16 +16,13 @@ import "server-only";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { auth, esPersonal } from "@/lib/auth";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 
 export type Rol = "alumno" | "centro" | "admin";
 
 export type UsuarioCentro = { id: string; nombre: string; email: string; rol: Rol; esAdmin: boolean };
-
-/** Roles que ven el panel. El admin es personal además de administrador. */
-const PERSONAL: readonly string[] = ["centro", "admin"];
 
 /** Devuelve el usuario si es personal del centro; null en cualquier otro caso. */
 export async function usuarioDelCentro(): Promise<UsuarioCentro | null> {
@@ -38,7 +35,7 @@ export async function usuarioDelCentro(): Promise<UsuarioCentro | null> {
     .where(eq(user.id, sesion.user.id))
     .limit(1);
 
-  if (!fila || !PERSONAL.includes(fila.rol)) return null;
+  if (!fila || !esPersonal(fila.rol)) return null;
   return {
     id: fila.id,
     nombre: fila.nombre,

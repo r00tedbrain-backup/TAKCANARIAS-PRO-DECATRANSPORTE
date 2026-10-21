@@ -21,6 +21,23 @@ import * as schema from "@/db/schema";
 export const REGISTRO_ABIERTO = process.env.AREA_ALUMNO_REGISTRO_ABIERTO === "1";
 
 /**
+ * Quién cuenta como personal del centro. ÚNICA lista: úsese siempre esta
+ * función, nunca `rol === "centro"` escrito a mano.
+ *
+ * Había tres copias de esta regla y, al añadir el rol `admin`, solo se
+ * actualizó una. Consecuencias: un administrador no podía dar de alta a nadie
+ * con el registro cerrado (el botón «Crear cuenta de personal» exigía ser
+ * admin y el bloqueo exigía ser `centro`, así que no funcionó nunca), y al
+ * entrar no se le llevaba a su panel.
+ *
+ * Vive aquí y no en `lib/centro.ts` porque ese fichero ya importa este; al
+ * revés sería una dependencia circular.
+ */
+export function esPersonal(rol: string | null | undefined): rol is "centro" | "admin" {
+  return rol === "centro" || rol === "admin";
+}
+
+/**
  * ¿La petición la hace alguien del centro?
  *
  * Se resuelve leyendo la sesión que viaja en las cabeceras y comprobando el rol
@@ -39,7 +56,7 @@ async function laPeticionVieneDelCentro(cabeceras: Headers | undefined): Promise
       .where(eq(schema.user.id, sesion.user.id))
       .limit(1);
 
-    return quien?.rol === "centro";
+    return esPersonal(quien?.rol);
   } catch {
     return false;
   }

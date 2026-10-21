@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { and, eq, sql } from "drizzle-orm";
 import { APIError } from "better-auth/api";
-import { auth } from "@/lib/auth";
+import { auth, esPersonal } from "@/lib/auth";
 import { db } from "@/db";
 import { alumno, horarioSemanal, reserva, sesionClase, user } from "@/db/schema";
 import { usuarioAdmin, usuarioDelCentro } from "@/lib/centro";
@@ -428,7 +428,7 @@ export async function crearCuentaPersonal(
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, mensaje: "Ese correo no es válido." };
   // Solo personal: para crear alumnos ya está el formulario de arriba, que
   // además les monta la ficha.
-  if (rol !== "centro" && rol !== "admin") {
+  if (!esPersonal(rol)) {
     return { ok: false, mensaje: "Elige si es personal del centro o administrador." };
   }
 

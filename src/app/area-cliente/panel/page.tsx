@@ -6,7 +6,7 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { ContactBand } from "@/components/contact-band";
 import { Icon } from "@/components/icon";
 import { BotonCerrarSesion } from "@/components/boton-cerrar-sesion";
-import { auth } from "@/lib/auth";
+import { auth, esPersonal } from "@/lib/auth";
 import { db } from "@/db";
 import { alumno, curso, matricula, user } from "@/db/schema";
 import { site } from "@/content/site";
@@ -44,7 +44,7 @@ export default async function PanelPage() {
   // acceso, porque así cubre todas las formas de llegar: entrar, escribir la
   // dirección a mano o volver con el botón de atrás.
   const [quien] = await db.select({ rol: user.rol }).from(user).where(eq(user.id, userId)).limit(1);
-  if (quien?.rol === "centro") redirect("/centro");
+  if (esPersonal(quien?.rol)) redirect("/centro");
 
   // Punto de partida: los alumnos que cuelgan de esta cuenta. Todo lo demás se
   // deriva de aquí, así que basta con que este filtro sea correcto para que

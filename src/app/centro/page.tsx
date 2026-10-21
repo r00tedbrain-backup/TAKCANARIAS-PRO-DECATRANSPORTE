@@ -6,6 +6,7 @@ import { PanelTelegram } from "@/components/panel-telegram";
 import { PanelAdmin } from "@/components/panel-admin";
 import { hayToken, identidadDelBot, leerEnlace } from "@/lib/telegram";
 import { exigirCentro } from "@/lib/centro";
+import { esPersonal } from "@/lib/auth";
 import { db } from "@/db";
 import { alumno, horarioSemanal, reserva, sesionClase, user } from "@/db/schema";
 
@@ -190,7 +191,7 @@ export default async function CentroPage() {
           nombre: c.nombre,
           email: c.email,
           correoVerificado: c.correoVerificado,
-          esDelCentro: c.rol === "centro",
+            esDelCentro: esPersonal(c.rol),
           alta: c.alta.toISOString(),
             alumnos: c.alumnos,
           }))}
