@@ -369,6 +369,27 @@ respuesta**; si algo se implementó con un valor provisional, está dicho aquí.
   como **administrador** el 21-10-2026, a petición expresa. Ver la nota de
   riesgo en "Cuentas vivas en producción".
 
+### Prácticas de 45 minutos (21-10-2026) — PENDIENTE de datos
+
+Manolo: «Las prácticas son de 45 minutos», **seguidas, sin hueco**. Un
+profesor descansa de 11:00 a 11:15, una profesora de 15:00 a 15:30, y «a los
+demás les doy una práctica entera de descanso».
+
+El horario de producción sigue siendo de franjas de 1 hora y **no se ha
+cambiado**: con descansos distintos, cada profesor acaba con sus propias horas
+de inicio, y sin saber de cada uno qué días trabaja, cuándo empieza, cuándo
+acaba y cuándo descansa, montarlo sería inventar horas en las que no hay
+profesor. Pedido a Manolo por WhatsApp. Se representa como una cadena de
+franjas de 45 min con 1 plaza **por profesor**; el modelo ya lo admite.
+
+Al cargarlo: **las 240 horas ya abiertas son de 1 hora** y «Abrir horas» no
+las toca. Hay que quitar las futuras sin reservas y volver a abrir. El
+21-10-2026 había 0 reservas, así que no perjudicaba a nadie.
+
+Mientras, el centro estaba editando el horario a mano (apareció un
+`16:15–17:00` y una franja menos). Si se carga el horario completo, esas
+ediciones se pierden: avisar antes.
+
 ### Lo que se encontró al volver un mes después (21-10-2026)
 
 - **La portada llevaba 16 días diciendo «Obligatorio en 12 días» y «El DeCA
