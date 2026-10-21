@@ -1530,3 +1530,17 @@ a:active, button:active { opacity: .8; }
 /* Las franjas con más de un coche se ven distintas sin leerlas. */
 .pc-celda:has(.pc-celda-texto.varios) { background: oklch(90% 0.05 266); }
 .pc-celda-texto.varios { color: var(--color-blue); }
+
+/* Botones − y + de cada casilla del horario. Grandes y redondos: es lo que
+   más se va a tocar cuando entre o salga un profesor "comodín". */
+.pc-leyenda { margin: 0 0 12px !important; font-size: 16px !important; }
+.pc-coches { display: flex; gap: 4px; margin-left: auto; }
+.pc-mas-menos {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; border: 2px solid var(--color-line); border-radius: 50%;
+  background: var(--color-white); color: var(--color-blue);
+  font: 700 20px/1 var(--font-body), sans-serif; cursor: pointer;
+}
+.pc-mas-menos:hover:not(:disabled) { border-color: var(--color-blue); background: var(--color-blue); color: var(--color-white); }
+.pc-mas-menos:disabled { opacity: .3; cursor: not-allowed; }
+.pc-celda { flex-wrap: nowrap; }

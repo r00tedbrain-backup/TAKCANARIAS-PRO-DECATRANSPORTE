@@ -12,7 +12,7 @@
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { APIError } from "better-auth/api";
 import { auth, esPersonal } from "@/lib/auth";
 import { db } from "@/db";
@@ -62,9 +62,113 @@ export async function anadirFranja(_previo: EstadoCentro, formData: FormData): P
     return { ok: false, mensaje: "Las plazas tienen que ser un número entre 1 y 50." };
   }
 
+  // Una hora repetida se guardaba sin error pero nunca llegaba a los alumnos:
+  // el índice único de las horas abiertas (ámbito, inicio, fin) descarta en
+  // silencio la segunda. Para poner otro coche a una hora que ya existe está
+  // el botón + de la cuadrícula.
+  const [repetida] = await db
+    .select({ id: horarioSemanal.id })
+    .from(horarioSemanal)
+    .where(
+      and(
+        eq(horarioSemanal.ambito, ambito),
+        eq(horarioSemanal.diaSemana, diaSemana),
+        eq(horarioSemanal.horaInicio, horaInicio),
+        eq(horarioSemanal.horaFin, horaFin),
+      ),
+    )
+    .limit(1);
+  if (repetida) {
+    return {
+      ok: false,
+      mensaje: "Esa hora ya está en el horario. Para poner otro coche, pulsa el botón + en su casilla.",
+    };
+  }
+
   await db.insert(horarioSemanal).values({ ambito, diaSemana, horaInicio, horaFin, plazas });
   revalidatePath("/centro");
   return { ok: true, mensaje: "Franja añadida al horario." };
+}
+
+const DIAS_PLURAL = ["", "lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
+
+/**
+ * Cambia cuántos coches (plazas) tiene una hora del horario, y lo aplica
+ * también a esa misma hora en las semanas que ya están abiertas.
+ *
+ * Sin lo segundo el botón engañaría: el horario diría 2 coches y los alumnos
+ * seguirían viendo 1 hasta abrir semanas nuevas.
+ *
+ * Bajar coches nunca deja a un alumno sin plaza: si una clase concreta ya
+ * tiene más reservas que los coches nuevos, esa se queda como estaba y se
+ * avisa. Para que eso sea cierto aunque alguien esté reservando en ese mismo
+ * instante, primero se bloquean las filas de esas clases (la reserva bloquea
+ * la misma fila antes de contar) y después se cuentan las reservas en otra
+ * sentencia, que ya ve las que acaban de confirmarse.
+ */
+export async function cambiarCoches(_previo: EstadoCentro, formData: FormData): Promise<EstadoCentro> {
+  if (!(await usuarioDelCentro())) return SIN_PERMISO;
+
+  const id = texto(formData, "franjaId");
+  const plazas = Number(texto(formData, "plazas"));
+  if (!id) return { ok: false, mensaje: "Falta indicar la hora." };
+  if (!Number.isInteger(plazas) || plazas < 1 || plazas > 50) {
+    return { ok: false, mensaje: "Tiene que haber entre 1 y 50 coches. Para quitar la hora entera, usa la X." };
+  }
+
+  const [franja] = await db.select().from(horarioSemanal).where(eq(horarioSemanal.id, id)).limit(1);
+  if (!franja) return { ok: false, mensaje: "Esa hora ya no está en el horario. Recarga la página." };
+
+  const { abiertas, cambiadas } = await db.transaction(async (tx) => {
+    await tx.update(horarioSemanal).set({ plazas }).where(eq(horarioSemanal.id, id));
+
+    const bloqueadas = await tx
+      .select({ id: sesionClase.id })
+      .from(sesionClase)
+      .where(
+        and(
+          eq(sesionClase.ambito, franja.ambito),
+          sql`${sesionClase.inicio} > now()`,
+          sql`EXTRACT(ISODOW FROM ${sesionClase.inicio} AT TIME ZONE 'Atlantic/Canary') = ${franja.diaSemana}::int`,
+          sql`to_char(${sesionClase.inicio} AT TIME ZONE 'Atlantic/Canary', 'HH24:MI') = ${franja.horaInicio}`,
+          sql`to_char(${sesionClase.fin} AT TIME ZONE 'Atlantic/Canary', 'HH24:MI') = ${franja.horaFin}`,
+        ),
+      )
+      .for("update");
+
+    if (bloqueadas.length === 0) return { abiertas: 0, cambiadas: 0 };
+
+    const hechas = await tx
+      .update(sesionClase)
+      .set({ plazas })
+      .where(
+        and(
+          inArray(
+            sesionClase.id,
+            bloqueadas.map((b) => b.id),
+          ),
+          sql`(SELECT count(*) FROM reserva r WHERE r.sesion_id = ${sesionClase.id} AND r.estado = 'activa') <= ${plazas}::int`,
+        ),
+      )
+      .returning({ id: sesionClase.id });
+
+    return { abiertas: bloqueadas.length, cambiadas: hechas.length };
+  });
+
+  revalidatePath("/centro");
+  revalidatePath("/area-cliente/reservas");
+
+  const coches = plazas === 1 ? "1 coche" : `${plazas} coches`;
+  const cuando = `los ${DIAS_PLURAL[franja.diaSemana] ?? ""} a las ${franja.horaInicio}`;
+  const sinCambiar = abiertas - cambiadas;
+
+  if (sinCambiar > 0) {
+    return {
+      ok: false,
+      mensaje: `Ahora hay ${coches} ${cuando}. Pero en ${sinCambiar === 1 ? "1 día" : `${sinCambiar} días`} ya hay más alumnos apuntados que coches, y ${sinCambiar === 1 ? "ese se ha quedado" : "esos se han quedado"} como estaba${sinCambiar === 1 ? "" : "n"}. Si de verdad no hay coche, anula esa reserva en «Quién viene».`,
+    };
+  }
+  return { ok: true, mensaje: `Hecho: ahora hay ${coches} ${cuando}.` };
 }
 
 export async function borrarFranja(_previo: EstadoCentro, formData: FormData): Promise<EstadoCentro> {

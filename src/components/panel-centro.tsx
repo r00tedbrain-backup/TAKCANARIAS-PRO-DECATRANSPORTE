@@ -34,6 +34,7 @@ import {
   anularHora,
   anularReservaDesdeCentro,
   borrarFranja,
+  cambiarCoches,
   generarHoras,
   validarAlumno,
   type EstadoCentro,
@@ -238,6 +239,7 @@ export function PanelCentro({
 }) {
   const [estAnadir, accAnadir, anadiendo] = useActionState(anadirFranja, INICIAL);
   const [estBorrar, accBorrar, borrando] = useActionState(borrarFranja, INICIAL);
+  const [estCoches, accCoches, cambiandoCoches] = useActionState(cambiarCoches, INICIAL);
   const [estGenerar, accGenerar, generando] = useActionState(generarHoras, INICIAL);
   const [estAnular, accAnular, anulando] = useActionState(anularHora, INICIAL);
   const [estValidar, accValidar, validando] = useActionState(validarAlumno, INICIAL);
@@ -523,11 +525,24 @@ export function PanelCentro({
           explicacion="Así es una semana normal. Se pone una vez y se repite sola. Los alumnos solo ven las horas que abras en el paso 2."
         >
           <Aviso estado={estBorrar} />
+          <Aviso estado={estCoches} />
 
           {franjas.length === 0 ? (
             <p className="pc-vacio">Todavía no hay horario. Añade la primera hora aquí abajo.</p>
           ) : (
-            <CuadriculaHorario franjas={franjas} accBorrar={accBorrar} borrando={borrando} />
+            <>
+              <p className="pc-pista pc-leyenda">
+                Pulsa <b>+</b> o <b>−</b> para cambiar los coches de esa hora. Se cambia también en las semanas ya
+                abiertas. La <b>×</b> quita la hora del horario.
+              </p>
+              <CuadriculaHorario
+                franjas={franjas}
+                accBorrar={accBorrar}
+                borrando={borrando}
+                accCoches={accCoches}
+                cambiandoCoches={cambiandoCoches}
+              />
+            </>
           )}
 
           <details className="pc-desplegable">
@@ -748,10 +763,14 @@ function CuadriculaHorario({
   franjas,
   accBorrar,
   borrando,
+  accCoches,
+  cambiandoCoches,
 }: {
   franjas: Franja[];
   accBorrar: (formData: FormData) => void;
   borrando: boolean;
+  accCoches: (formData: FormData) => void;
+  cambiandoCoches: boolean;
 }) {
   const horasInicio = [...new Set(franjas.map((f) => f.horaInicio))].sort();
   const diasConClase = new Set(franjas.map((f) => f.diaSemana));
@@ -798,6 +817,34 @@ function CuadriculaHorario({
                           {cuantos(f)}
                           {variosTipos && <small>{nombreAmbito(f.ambito)}</small>}
                         </span>
+                        {/* Un solo formulario con dos botones: cada uno envía su
+                            propio valor de "plazas", así no hay que escribir
+                            ningún número. */}
+                        <form action={accCoches} className="pc-coches">
+                          <input type="hidden" name="franjaId" value={f.id} />
+                          <button
+                            className="pc-mas-menos"
+                            type="submit"
+                            name="plazas"
+                            value={f.plazas - 1}
+                            disabled={cambiandoCoches || f.plazas <= 1}
+                            aria-label={`Un coche menos ${d.nombre} a las ${f.horaInicio}`}
+                            title={f.plazas <= 1 ? "Para quitar la hora entera, usa la ×" : "Un coche menos"}
+                          >
+                            −
+                          </button>
+                          <button
+                            className="pc-mas-menos"
+                            type="submit"
+                            name="plazas"
+                            value={f.plazas + 1}
+                            disabled={cambiandoCoches || f.plazas >= 50}
+                            aria-label={`Un coche más ${d.nombre} a las ${f.horaInicio}`}
+                            title="Un coche más"
+                          >
+                            +
+                          </button>
+                        </form>
                         <form action={accBorrar}>
                           <input type="hidden" name="franjaId" value={f.id} />
                           <button
